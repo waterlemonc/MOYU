@@ -3,37 +3,138 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOYU</title>
+    <title>MOYU 摸鱼指挥部</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
     <main class="shell">
       <section class="hero">
-        <p class="eyebrow">MOYU LAB</p>
-        <h1>摸鱼静态页与小游戏展示站</h1>
-        <p class="intro">
-          这里可以持续收纳一些轻松的小页面、实验性质的交互作品，或者随手做的小游戏。
-        </p>
+        <div class="hero-copy">
+          <p class="eyebrow">MOYU CONTROL ROOM</p>
+          <h1>摸鱼指挥部</h1>
+          <p class="intro">
+            一个专门收纳静态页面、小游戏和轻量整活作品的小基地。工作不一定做完，但页面可以先做得很快乐。
+          </p>
+
+          <div class="hero-actions">
+            <a class="action primary" href="./games/">打开小游戏仓</a>
+            <a class="action secondary" href="./pages/">浏览静态页</a>
+          </div>
+        </div>
+
+        <aside class="hero-board" aria-label="摸鱼情报">
+          <div class="board-chip">
+            <span class="board-label">今日状态</span>
+            <strong id="moyu-status">工位在线，灵魂稍后到达</strong>
+          </div>
+          <div class="board-metrics">
+            <div class="metric">
+              <span>摸鱼指数</span>
+              <strong id="moyu-score">87%</strong>
+            </div>
+            <div class="metric">
+              <span>灵感信号</span>
+              <strong>满格</strong>
+            </div>
+            <div class="metric">
+              <span>适宜操作</span>
+              <strong>小窗摸鱼</strong>
+            </div>
+          </div>
+        </aside>
       </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>内容入口</h2>
-          <span>持续更新</span>
-        </div>
+      <section class="dashboard">
+        <article class="feature feature-wide">
+          <div class="feature-head">
+            <div>
+              <p class="kicker">导航中心</p>
+              <h2>摸鱼入口</h2>
+            </div>
+            <span class="badge">持续扩建中</span>
+          </div>
 
-        <div class="grid">
-          <a class="card soon" href="./pages/">
-            <strong>静态页面</strong>
-            <p>把专题页、整活页、单文件 demo 放在这里。</p>
-          </a>
+          <div class="portal-grid">
+            <a class="portal-card sunset" href="./pages/">
+              <span class="portal-tag">静态页</span>
+              <strong>页面陈列室</strong>
+              <p>专题页、整活页、单文件 demo 都可以往这里堆，做完就上线。</p>
+            </a>
 
-          <a class="card soon" href="./games/">
-            <strong>小游戏</strong>
-            <p>适合收纳 canvas、DOM 或纯前端小游戏。</p>
-          </a>
-        </div>
+            <a class="portal-card mint" href="./games/">
+              <span class="portal-tag">小游戏</span>
+              <strong>快乐试验田</strong>
+              <p>适合放轻量小游戏、交互实验和一些能在工位上悄悄打开的小项目。</p>
+            </a>
+
+            <a class="portal-card sky" href="./games/sand-paint.html">
+              <span class="portal-tag">推荐摸鱼</span>
+              <strong>彩砂流动画板</strong>
+              <p>点击或滑动就能甩出彩色粒子，落沙会在底部慢慢堆起来，适合发呆和解压。</p>
+            </a>
+          </div>
+        </article>
+
+        <article class="feature feature-calendar">
+          <div class="feature-head">
+            <div>
+              <p class="kicker">摸鱼组件</p>
+              <h2>摸鱼日历</h2>
+            </div>
+            <span class="badge badge-soft" id="calendar-month-label">本月排班</span>
+          </div>
+
+          <div class="calendar-summary">
+            <div>
+              <span>今日</span>
+              <strong id="today-label">--</strong>
+            </div>
+            <div>
+              <span>建议动作</span>
+              <strong id="today-tip">先喝水再开会</strong>
+            </div>
+          </div>
+
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>一</span>
+            <span>二</span>
+            <span>三</span>
+            <span>四</span>
+            <span>五</span>
+            <span>六</span>
+            <span>日</span>
+          </div>
+
+          <div class="calendar-grid" id="calendar-grid"></div>
+        </article>
+
+        <article class="feature feature-jokes">
+          <div class="feature-head">
+            <div>
+              <p class="kicker">精神口粮</p>
+              <h2>摸鱼段子</h2>
+            </div>
+            <button class="ghost-button" id="refresh-joke" type="button">换一条</button>
+          </div>
+
+          <blockquote class="joke-card" id="joke-card">
+            <p id="joke-text">
+              今天不是不努力，只是在等待一个足够能说服自己的咖啡温度。
+            </p>
+            <footer id="joke-source">摸鱼办每日播报</footer>
+          </blockquote>
+
+          <ul class="joke-list" aria-label="摸鱼金句">
+            <li>会开得越久，越适合悄悄规划晚饭。</li>
+            <li>鼠标移动得很认真，不代表事情推进得很快。</li>
+            <li>灵感偶尔会迟到，但它通常会带着奶茶一起出现。</li>
+          </ul>
+        </article>
       </section>
     </main>
+
+    <script src="script.js"></script>
   </body>
 </html>
