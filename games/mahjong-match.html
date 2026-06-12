@@ -6,16 +6,13 @@
     <title>麻将消消乐</title>
     <style>
       :root {
-        --bg: #efe5d1;
-        --bg-deep: #d9c4a0;
-        --panel: rgba(255, 251, 243, 0.82);
-        --line: rgba(64, 50, 31, 0.12);
-        --ink: #24303b;
-        --muted: #697482;
-        --accent: #bf4d30;
-        --accent-soft: #f4d3a0;
-        --good: #3f8a5d;
-        --shadow: 0 26px 60px rgba(69, 53, 34, 0.14);
+        --ink: #203040;
+        --muted: #6c7c85;
+        --good: #2f8d5e;
+        --warn: #b65533;
+        --panel: rgba(255, 250, 242, 0.88);
+        --line: rgba(42, 55, 63, 0.12);
+        --shadow: 0 24px 60px rgba(55, 44, 28, 0.18);
       }
 
       * {
@@ -28,96 +25,61 @@
         font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(191, 77, 48, 0.16), transparent 24%),
-          radial-gradient(circle at right bottom, rgba(63, 138, 93, 0.14), transparent 18%),
-          linear-gradient(180deg, #f9f2e5 0%, var(--bg) 54%, var(--bg-deep) 100%);
+          radial-gradient(circle at top left, rgba(255, 233, 132, 0.28), transparent 20%),
+          radial-gradient(circle at top right, rgba(110, 180, 113, 0.26), transparent 18%),
+          linear-gradient(180deg, #91d157 0%, #56b857 16%, #44af60 42%, #36a863 100%);
       }
 
       .shell {
-        width: min(1200px, calc(100% - 24px));
+        width: min(1240px, calc(100% - 20px));
         margin: 0 auto;
-        padding: 24px 0 40px;
-      }
-
-      .hero,
-      .panel {
-        border: 1px solid var(--line);
-        border-radius: 28px;
-        background: var(--panel);
-        backdrop-filter: blur(12px);
-        box-shadow: var(--shadow);
+        padding: 18px 0 28px;
       }
 
       .hero {
-        padding: 24px;
-        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 22px;
+        border-radius: 24px;
+        background: rgba(255, 250, 242, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.36);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
       }
 
       .eyebrow {
-        margin: 0 0 10px;
+        margin: 0 0 8px;
         font-size: 12px;
         font-weight: 800;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        letter-spacing: 0.18em;
-        color: var(--accent);
+        color: #9d4b30;
       }
 
       h1,
       h2,
+      h3,
       p {
         margin: 0;
       }
 
-      .intro {
-        margin-top: 14px;
+      .hero p:last-child {
+        margin-top: 10px;
         max-width: 60ch;
-        line-height: 1.8;
+        line-height: 1.7;
         color: var(--muted);
       }
 
-      .layout {
-        display: grid;
-        grid-template-columns: 280px minmax(0, 1fr);
-        gap: 18px;
-      }
-
-      .sidebar,
-      .board-wrap {
-        padding: 22px;
-      }
-
-      .stats {
-        display: grid;
-        gap: 12px;
-      }
-
-      .stat {
-        padding: 14px 16px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.68);
-        border: 1px solid rgba(64, 50, 31, 0.08);
-      }
-
-      .stat span {
-        display: block;
-        color: var(--muted);
-        font-size: 0.88rem;
-      }
-
-      .stat strong {
-        display: block;
-        margin-top: 8px;
-        font-size: 1.25rem;
-      }
-
-      .actions {
-        display: grid;
+      .top-actions {
+        display: flex;
+        flex-wrap: wrap;
         gap: 10px;
-        margin-top: 16px;
       }
 
       button,
-      .back {
+      a.button-link {
         appearance: none;
         border: 0;
         border-radius: 999px;
@@ -126,155 +88,397 @@
         font-weight: 700;
         cursor: pointer;
         text-decoration: none;
-        text-align: center;
-        transition: transform 160ms ease, box-shadow 160ms ease;
+        transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
       }
 
       button:hover,
-      .back:hover {
+      a.button-link:hover {
         transform: translateY(-2px);
       }
 
       .primary {
-        color: #fffaf4;
-        background: linear-gradient(135deg, var(--accent), #df8251);
-        box-shadow: 0 14px 24px rgba(191, 77, 48, 0.24);
+        color: #fffaf2;
+        background: linear-gradient(135deg, #c85b31, #e29444);
+        box-shadow: 0 14px 24px rgba(200, 91, 49, 0.24);
       }
 
-      .secondary,
-      .back {
+      .secondary {
         color: var(--ink);
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(64, 50, 31, 0.08);
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(42, 55, 63, 0.08);
+      }
+
+      .scene {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 28px;
+        background:
+          radial-gradient(circle at 22% 72%, rgba(255, 255, 255, 0.14), transparent 10%),
+          radial-gradient(circle at 66% 30%, rgba(255, 255, 255, 0.14), transparent 10%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 310px;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .board-area {
+        position: relative;
+        min-height: 720px;
+        border-radius: 26px;
+        background:
+          radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.18), transparent 28%),
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.12), transparent 18%),
+          linear-gradient(180deg, rgba(130, 210, 120, 0.42), rgba(80, 170, 92, 0.18));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .board-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px 16px 0;
+      }
+
+      .board-header h2 {
+        font-size: 1.1rem;
+      }
+
+      .status {
+        color: rgba(255, 255, 255, 0.92);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+      }
+
+      .board {
+        position: relative;
+        height: 560px;
+        margin: 8px 12px 0;
+      }
+
+      .tile {
+        position: absolute;
+        width: 72px;
+        height: 96px;
+        padding: 0;
+        border-radius: 16px;
+        border: 1px solid rgba(61, 49, 31, 0.12);
+        background: linear-gradient(180deg, #fefcf7 0%, #f0e6d6 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          0 8px 16px rgba(64, 50, 31, 0.18);
+      }
+
+      .tile::before {
+        content: "";
+        position: absolute;
+        inset: -6px 0 auto auto;
+        width: 100%;
+        height: 100%;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(70, 70, 70, 0.7), rgba(120, 120, 120, 0.45));
+        transform: translate(0, -8px);
+        z-index: -1;
+      }
+
+      .tile-face {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding-top: 6px;
+      }
+
+      .tile-glyph {
+        font-size: 1.85rem;
+        line-height: 1;
+      }
+
+      .tile-name {
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: #6f736f;
+      }
+
+      .tile.covered {
+        filter: grayscale(0.08) brightness(0.92);
+        cursor: not-allowed;
+      }
+
+      .tile.covered .tile-face {
+        opacity: 0.92;
+      }
+
+      .tile.available:hover {
+        transform: translateY(-4px);
+      }
+
+      .tile.bomb-target {
+        box-shadow:
+          inset 0 0 0 2px rgba(230, 84, 43, 0.36),
+          0 0 0 8px rgba(255, 182, 91, 0.24),
+          0 12px 24px rgba(230, 84, 43, 0.22);
+      }
+
+      .tile.removing {
+        opacity: 0;
+        transform: scale(0.9);
+        pointer-events: none;
+      }
+
+      .theme-bamboo .tile-glyph {
+        color: #338754;
+      }
+
+      .theme-coin .tile-glyph {
+        color: #c85d2f;
+      }
+
+      .theme-wind .tile-glyph {
+        color: #426aa4;
+      }
+
+      .theme-dragon .tile-glyph {
+        color: #9f3856;
+      }
+
+      .tray-area {
+        position: absolute;
+        inset: auto 18px 18px 18px;
+      }
+
+      .tray-panel {
+        padding: 14px 16px 16px;
+        border-radius: 24px;
+        background: rgba(118, 70, 28, 0.84);
+        border: 3px solid rgba(236, 173, 87, 0.66);
+        box-shadow: 0 16px 28px rgba(78, 43, 16, 0.24);
+      }
+
+      .tray-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        color: #fff6de;
+      }
+
+      .tray {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .tray-slot {
+        min-height: 86px;
+        border-radius: 16px;
+        background: rgba(78, 43, 16, 0.28);
+        border: 2px dashed rgba(255, 228, 182, 0.14);
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+
+      .tray-slot.filled {
+        background: rgba(255, 251, 244, 0.1);
+        border-style: solid;
+        border-color: rgba(255, 237, 205, 0.18);
+      }
+
+      .tray-slot.locked-slot {
+        border-style: solid;
+        border-color: rgba(255, 215, 120, 0.2);
+        background: linear-gradient(180deg, rgba(96, 57, 22, 0.9), rgba(146, 97, 33, 0.88));
+        color: #ffe4b7;
+      }
+
+      .tray-tile {
+        width: 60px;
+        height: 78px;
+        border-radius: 14px;
+        border: 1px solid rgba(61, 49, 31, 0.14);
+        background: linear-gradient(180deg, #fefcf7 0%, #f0e6d6 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        display: grid;
+        place-items: center;
+      }
+
+      .tray-glyph {
+        font-size: 1.45rem;
+      }
+
+      .tray-name {
+        margin-top: 4px;
+        font-size: 0.74rem;
+        color: #6f736f;
+      }
+
+      .sidebar {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        padding: 18px;
+        border-radius: 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .stats {
+        display: grid;
+        gap: 10px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(42, 55, 63, 0.08);
+      }
+
+      .stat span {
+        display: block;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      .stat strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 1.2rem;
+      }
+
+      .tools {
+        display: grid;
+        gap: 10px;
+      }
+
+      .tool-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(42, 55, 63, 0.08);
+        color: var(--ink);
+      }
+
+      .tool-copy {
+        text-align: left;
+      }
+
+      .tool-copy strong {
+        display: block;
+        font-size: 1rem;
+      }
+
+      .tool-copy span {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      .count-badge {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 999px;
+        display: inline-grid;
+        place-items: center;
+        background: rgba(233, 159, 68, 0.18);
+        color: #9a572a;
+        font-weight: 800;
+      }
+
+      .tool-button:disabled,
+      .secondary:disabled,
+      .primary:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
       }
 
       .tips {
-        margin-top: 18px;
-        padding: 16px;
-        border-radius: 18px;
-        background: rgba(244, 211, 160, 0.38);
-        color: #5b4d3d;
+        color: var(--muted);
         line-height: 1.75;
       }
 
       .tips strong {
         display: block;
         margin-bottom: 8px;
+        color: var(--ink);
       }
 
-      .board-head {
-        display: flex;
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 16px;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(16, 22, 28, 0.56);
+        z-index: 30;
       }
 
-      .status {
+      .modal.open {
+        display: flex;
+      }
+
+      .modal-card {
+        width: min(480px, 100%);
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 251, 243, 0.96);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+      }
+
+      .modal-card p {
+        margin-top: 10px;
         color: var(--muted);
-        font-size: 0.96rem;
+        line-height: 1.75;
       }
 
-      .board {
-        display: grid;
-        grid-template-columns: repeat(12, minmax(52px, 1fr));
-        gap: 10px;
-      }
-
-      .tile {
-        position: relative;
-        aspect-ratio: 0.78;
-        border-radius: 18px;
-        border: 1px solid rgba(64, 50, 31, 0.12);
-        background: linear-gradient(180deg, #fffef8 0%, #f5ecde 100%);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.9),
-          0 10px 16px rgba(73, 57, 38, 0.08);
-        cursor: pointer;
-        transition: transform 140ms ease, box-shadow 140ms ease, opacity 160ms ease;
-      }
-
-      .tile:hover {
-        transform: translateY(-3px);
-      }
-
-      .tile.locked {
-        opacity: 0.44;
-        filter: saturate(0.7);
-        cursor: not-allowed;
-      }
-
-      .tile.selected {
-        transform: translateY(-4px) scale(1.03);
-        box-shadow:
-          inset 0 0 0 2px rgba(191, 77, 48, 0.24),
-          0 16px 26px rgba(191, 77, 48, 0.18);
-      }
-
-      .tile.hint {
-        animation: pulse 1s ease-in-out 0s 2;
-      }
-
-      .tile.removed {
-        opacity: 0;
-        transform: scale(0.86);
-        pointer-events: none;
-      }
-
-      .tile-inner {
-        position: absolute;
-        inset: 8px;
-        border-radius: 14px;
+      .qr-frame {
+        margin: 18px auto 0;
+        width: min(320px, 100%);
+        aspect-ratio: 1;
+        padding: 16px;
+        border-radius: 20px;
+        background: white;
+        border: 1px solid rgba(42, 55, 63, 0.08);
         display: grid;
         place-items: center;
-        text-align: center;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 243, 229, 0.82));
       }
 
-      .tile-glyph {
-        font-size: 1.6rem;
-        line-height: 1;
+      .qr-art {
+        width: 100%;
+        height: 100%;
+        display: block;
       }
 
-      .tile-name {
-        margin-top: 6px;
-        font-size: 0.82rem;
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .footer-note {
+        margin-top: 10px;
+        font-size: 0.84rem;
         color: var(--muted);
-      }
-
-      .theme-bamboo .tile-glyph {
-        color: #2f8a4f;
-      }
-
-      .theme-coin .tile-glyph {
-        color: #c55d26;
-      }
-
-      .theme-wind .tile-glyph {
-        color: #47679b;
-      }
-
-      .theme-dragon .tile-glyph {
-        color: #9d3657;
-      }
-
-      .win {
-        color: var(--good);
-        font-weight: 700;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-
-        50% {
-          transform: translateY(-4px) scale(1.03);
-          box-shadow:
-            inset 0 0 0 2px rgba(63, 138, 93, 0.28),
-            0 16px 24px rgba(63, 138, 93, 0.18);
-        }
       }
 
       @media (max-width: 980px) {
@@ -282,35 +486,46 @@
           grid-template-columns: 1fr;
         }
 
-        .board {
-          grid-template-columns: repeat(6, minmax(46px, 1fr));
+        .board-area {
+          min-height: 760px;
         }
       }
 
       @media (max-width: 640px) {
         .shell {
-          width: min(100% - 16px, 1200px);
-          padding: 16px 0 28px;
+          width: min(100% - 12px, 1240px);
         }
 
-        .hero,
-        .panel {
-          border-radius: 22px;
-        }
-
-        .hero,
-        .sidebar,
-        .board-wrap {
-          padding: 18px;
+        .hero {
+          flex-direction: column;
+          align-items: flex-start;
         }
 
         .board {
-          grid-template-columns: repeat(4, minmax(44px, 1fr));
-          gap: 8px;
+          height: 490px;
+          margin: 8px 6px 0;
+        }
+
+        .tile {
+          width: 56px;
+          height: 76px;
         }
 
         .tile-glyph {
-          font-size: 1.35rem;
+          font-size: 1.45rem;
+        }
+
+        .tray {
+          gap: 6px;
+        }
+
+        .tray-slot {
+          min-height: 72px;
+        }
+
+        .tray-tile {
+          width: 48px;
+          height: 64px;
         }
       }
     </style>
@@ -318,63 +533,198 @@
   <body>
     <main class="shell">
       <section class="hero">
-        <p class="eyebrow">MOYU MAHJONG</p>
-        <h1>麻将消消乐</h1>
-        <p class="intro">
-          规则很简单：只能点击左右至少有一边空着的麻将牌。选中两张同样的牌，就能把它们一起消掉。
-        </p>
+        <div>
+          <p class="eyebrow">MOYU MAHJONG</p>
+          <h1>麻将消消乐</h1>
+          <p>从桌面里挑牌放入手牌槽，凑齐 3 张相同麻将就会自动消除。桌面清空即挑战成功，手牌槽爆满则挑战失败。</p>
+        </div>
+
+        <div class="top-actions">
+          <button class="primary" id="restart-button" type="button">重新开局</button>
+          <a class="button-link secondary" href="../index.html">返回摸鱼指挥部</a>
+        </div>
       </section>
 
-      <section class="layout">
-        <aside class="panel sidebar">
-          <div class="stats">
-            <div class="stat">
-              <span>剩余牌数</span>
-              <strong id="remaining-count">0</strong>
+      <section class="scene">
+        <div class="layout">
+          <section class="board-area">
+            <div class="board-header">
+              <h2>桌面区</h2>
+              <span class="status" id="board-status">选一张没有被压住的麻将开始摸鱼。</span>
             </div>
-            <div class="stat">
-              <span>已消对子</span>
-              <strong id="match-count">0</strong>
+
+            <div class="board" id="board"></div>
+
+            <div class="tray-area">
+              <div class="tray-panel">
+                <div class="tray-head">
+                  <strong>手牌区</strong>
+                  <span id="tray-status">当前上限 7 格</span>
+                </div>
+                <div class="tray" id="tray"></div>
+              </div>
             </div>
-            <div class="stat">
-              <span>当前状态</span>
-              <strong id="status-text">准备开局</strong>
-            </div>
-          </div>
+          </section>
 
-          <div class="actions">
-            <button class="primary" id="restart-button" type="button">重新开局</button>
-            <button class="secondary" id="shuffle-button" type="button">重新洗牌</button>
-            <button class="secondary" id="hint-button" type="button">给我提示</button>
-            <a class="back" href="../index.html">返回摸鱼指挥部</a>
-          </div>
+          <aside class="sidebar">
+            <section class="panel">
+              <div class="stats">
+                <div class="stat">
+                  <span>桌面剩余</span>
+                  <strong id="board-count">0</strong>
+                </div>
+                <div class="stat">
+                  <span>手牌数量</span>
+                  <strong id="tray-count">0 / 7</strong>
+                </div>
+                <div class="stat">
+                  <span>当前状态</span>
+                  <strong id="status-text">准备开局</strong>
+                </div>
+              </div>
+            </section>
 
-          <div class="tips">
-            <strong>摸鱼提示</strong>
-            牌被视作“可点”时，左右至少一侧必须没有相邻牌。洗牌会保留当前已消进度，只重新摆放剩余牌。
-          </div>
-        </aside>
+            <section class="panel">
+              <h3>辅助功能</h3>
+              <div class="tools">
+                <button class="tool-button" id="remove-three-button" type="button">
+                  <span class="tool-copy">
+                    <strong>移除三张</strong>
+                    <span>把手牌区最前面的 3 张退回桌面</span>
+                  </span>
+                  <span class="count-badge" id="remove-three-count">1</span>
+                </button>
 
-        <section class="panel board-wrap">
-          <div class="board-head">
-            <h2>牌桌</h2>
-            <span class="status" id="board-status">看看哪两张先有缘分。</span>
-          </div>
+                <button class="tool-button" id="bomb-button" type="button">
+                  <span class="tool-copy">
+                    <strong>强力炸弹</strong>
+                    <span>点一张桌面牌，直接炸掉 3 张同类</span>
+                  </span>
+                  <span class="count-badge" id="bomb-count">1</span>
+                </button>
 
-          <div class="board" id="board"></div>
-        </section>
+                <button class="tool-button" id="shuffle-button" type="button">
+                  <span class="tool-copy">
+                    <strong>随机打乱</strong>
+                    <span>把桌面剩余麻将重新随机摆放</span>
+                  </span>
+                  <span class="count-badge" id="shuffle-count">1</span>
+                </button>
+
+                <button class="tool-button" id="unlock-button" type="button">
+                  <span class="tool-copy">
+                    <strong>解锁第 8 格</strong>
+                    <span>弹出二维码提示关注公众号“摸鱼小宇宙”</span>
+                  </span>
+                  <span class="count-badge" id="unlock-count">锁</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel tips">
+              <strong>规则说明</strong>
+              只有没有被上层压住的麻将可以点击。凑齐 3 张相同麻将会自动清除。手牌达到当前上限且没有组成三消时，本局立即失败。
+            </section>
+          </aside>
+        </div>
       </section>
     </main>
 
+    <div class="modal" id="qr-modal" aria-hidden="true">
+      <div class="modal-card">
+        <h3>解锁第 8 格</h3>
+        <p>关注公众号“摸鱼小宇宙”即可解锁额外手牌格。这里先给你保留了弹窗与二维码展示位。</p>
+
+        <div class="qr-frame">
+          <svg class="qr-art" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-label="二维码示意图">
+            <rect width="320" height="320" fill="#fff" />
+            <g fill="#111">
+              <rect x="18" y="18" width="72" height="72" />
+              <rect x="28" y="28" width="52" height="52" fill="#fff" />
+              <rect x="38" y="38" width="32" height="32" />
+              <rect x="230" y="18" width="72" height="72" />
+              <rect x="240" y="28" width="52" height="52" fill="#fff" />
+              <rect x="250" y="38" width="32" height="32" />
+              <rect x="18" y="230" width="72" height="72" />
+              <rect x="28" y="240" width="52" height="52" fill="#fff" />
+              <rect x="38" y="250" width="32" height="32" />
+              <rect x="116" y="24" width="16" height="16" />
+              <rect x="148" y="24" width="16" height="16" />
+              <rect x="164" y="24" width="16" height="16" />
+              <rect x="196" y="24" width="16" height="16" />
+              <rect x="108" y="56" width="16" height="16" />
+              <rect x="132" y="56" width="16" height="16" />
+              <rect x="164" y="56" width="16" height="16" />
+              <rect x="188" y="56" width="16" height="16" />
+              <rect x="108" y="92" width="16" height="16" />
+              <rect x="124" y="92" width="16" height="16" />
+              <rect x="156" y="92" width="16" height="16" />
+              <rect x="188" y="92" width="16" height="16" />
+              <rect x="220" y="108" width="16" height="16" />
+              <rect x="92" y="124" width="16" height="16" />
+              <rect x="124" y="124" width="16" height="16" />
+              <rect x="148" y="124" width="16" height="16" />
+              <rect x="180" y="124" width="16" height="16" />
+              <rect x="212" y="124" width="16" height="16" />
+              <rect x="244" y="124" width="16" height="16" />
+              <rect x="100" y="156" width="16" height="16" />
+              <rect x="132" y="156" width="16" height="16" />
+              <rect x="164" y="156" width="16" height="16" />
+              <rect x="196" y="156" width="16" height="16" />
+              <rect x="228" y="156" width="16" height="16" />
+              <rect x="92" y="188" width="16" height="16" />
+              <rect x="116" y="188" width="16" height="16" />
+              <rect x="148" y="188" width="16" height="16" />
+              <rect x="180" y="188" width="16" height="16" />
+              <rect x="212" y="188" width="16" height="16" />
+              <rect x="244" y="188" width="16" height="16" />
+              <rect x="100" y="220" width="16" height="16" />
+              <rect x="124" y="220" width="16" height="16" />
+              <rect x="156" y="220" width="16" height="16" />
+              <rect x="188" y="220" width="16" height="16" />
+              <rect x="220" y="220" width="16" height="16" />
+              <rect x="252" y="220" width="16" height="16" />
+              <rect x="100" y="252" width="16" height="16" />
+              <rect x="132" y="252" width="16" height="16" />
+              <rect x="164" y="252" width="16" height="16" />
+              <rect x="188" y="252" width="16" height="16" />
+              <rect x="220" y="252" width="16" height="16" />
+              <rect x="252" y="252" width="16" height="16" />
+            </g>
+            <circle cx="160" cy="160" r="34" fill="#dbe7f7" stroke="#7f9fc6" stroke-width="4" />
+            <text x="160" y="168" text-anchor="middle" font-size="16" fill="#546b90" font-family="Segoe UI, sans-serif">摸鱼小宇宙</text>
+          </svg>
+        </div>
+
+        <p class="footer-note">说明：这里先放的是站内示意二维码位。如果你想换成你提供的那张真实二维码图，我可以下一步再替换成正式资源。</p>
+
+        <div class="modal-actions">
+          <button class="secondary" id="close-modal-button" type="button">先看看</button>
+          <button class="primary" id="confirm-unlock-button" type="button">已关注，解锁第 8 格</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const boardEl = document.getElementById("board");
-      const remainingCountEl = document.getElementById("remaining-count");
-      const matchCountEl = document.getElementById("match-count");
+      const trayEl = document.getElementById("tray");
+      const boardCountEl = document.getElementById("board-count");
+      const trayCountEl = document.getElementById("tray-count");
       const statusTextEl = document.getElementById("status-text");
       const boardStatusEl = document.getElementById("board-status");
+      const trayStatusEl = document.getElementById("tray-status");
       const restartButton = document.getElementById("restart-button");
+      const removeThreeButton = document.getElementById("remove-three-button");
+      const bombButton = document.getElementById("bomb-button");
       const shuffleButton = document.getElementById("shuffle-button");
-      const hintButton = document.getElementById("hint-button");
+      const unlockButton = document.getElementById("unlock-button");
+      const removeThreeCountEl = document.getElementById("remove-three-count");
+      const bombCountEl = document.getElementById("bomb-count");
+      const shuffleCountEl = document.getElementById("shuffle-count");
+      const unlockCountEl = document.getElementById("unlock-count");
+      const qrModal = document.getElementById("qr-modal");
+      const closeModalButton = document.getElementById("close-modal-button");
+      const confirmUnlockButton = document.getElementById("confirm-unlock-button");
 
       const tileDefs = [
         { key: "bamboo-1", glyph: "竹", name: "青竹", theme: "bamboo" },
@@ -391,20 +741,23 @@
         { key: "dragon-2", glyph: "发", name: "发财", theme: "dragon" },
       ];
 
-      const slotCount = 48;
-      const baseDeck = tileDefs.flatMap((tile) => [
-        { ...tile, id: `${tile.key}-a` },
-        { ...tile, id: `${tile.key}-b` },
-        { ...tile, id: `${tile.key}-c` },
-        { ...tile, id: `${tile.key}-d` },
+      const baseTiles = tileDefs.flatMap((tile, index) => [
+        { ...tile, id: `${tile.key}-1`, order: index * 3 + 1 },
+        { ...tile, id: `${tile.key}-2`, order: index * 3 + 2 },
+        { ...tile, id: `${tile.key}-3`, order: index * 3 + 3 },
       ]);
 
-      let state = {
-        tiles: [],
-        selectedId: null,
-        matchCount: 0,
-        locked: false,
-      };
+      const slots = [
+        { x: 40, y: 48, z: 0 }, { x: 118, y: 48, z: 0 }, { x: 196, y: 48, z: 0 }, { x: 274, y: 48, z: 0 }, { x: 352, y: 48, z: 0 }, { x: 430, y: 48, z: 0 }, { x: 508, y: 48, z: 0 }, { x: 586, y: 48, z: 0 },
+        { x: 79, y: 118, z: 0 }, { x: 157, y: 118, z: 0 }, { x: 235, y: 118, z: 0 }, { x: 313, y: 118, z: 0 }, { x: 391, y: 118, z: 0 }, { x: 469, y: 118, z: 0 }, { x: 547, y: 118, z: 0 },
+        { x: 40, y: 198, z: 0 }, { x: 118, y: 198, z: 0 }, { x: 196, y: 198, z: 0 }, { x: 274, y: 198, z: 0 }, { x: 352, y: 198, z: 0 }, { x: 430, y: 198, z: 0 }, { x: 508, y: 198, z: 0 }, { x: 586, y: 198, z: 0 },
+        { x: 79, y: 278, z: 0 }, { x: 157, y: 278, z: 0 }, { x: 235, y: 278, z: 0 }, { x: 313, y: 278, z: 0 }, { x: 391, y: 278, z: 0 }, { x: 469, y: 278, z: 0 }, { x: 547, y: 278, z: 0 },
+        { x: 120, y: 92, z: 1 }, { x: 198, y: 92, z: 1 }, { x: 276, y: 92, z: 1 }, { x: 354, y: 92, z: 1 }, { x: 432, y: 92, z: 1 }, { x: 510, y: 92, z: 1 },
+        { x: 120, y: 172, z: 1 }, { x: 198, y: 172, z: 1 }, { x: 276, y: 172, z: 1 }, { x: 354, y: 172, z: 1 }, { x: 432, y: 172, z: 1 }, { x: 510, y: 172, z: 1 },
+        { x: 159, y: 140, z: 2 }, { x: 237, y: 140, z: 2 }, { x: 315, y: 140, z: 2 }, { x: 393, y: 140, z: 2 }, { x: 471, y: 140, z: 2 },
+      ];
+
+      let state = {};
 
       function shuffle(list) {
         const arr = [...list];
@@ -415,241 +768,351 @@
         return arr;
       }
 
-      function getRemainingTiles() {
-        return state.tiles.filter((tile) => !tile.removed);
+      function resetState() {
+        const shuffledTiles = shuffle(baseTiles);
+        state = {
+          boardTiles: shuffledTiles.map((tile, index) => ({
+            ...tile,
+            slotIndex: index,
+            removing: false,
+          })),
+          trayTiles: [],
+          trayLimit: 7,
+          unlockedExtraSlot: false,
+          toolUses: {
+            removeThree: 1,
+            bomb: 1,
+            shuffle: 1,
+          },
+          gameOver: false,
+          win: false,
+          bombMode: false,
+          message: "选一张没有被压住的麻将开始摸鱼。",
+        };
       }
 
-      function getTileById(id) {
-        return state.tiles.find((tile) => tile.id === id);
+      function getBoardTileById(id) {
+        return state.boardTiles.find((tile) => tile.id === id);
       }
 
-      function isTileFree(tile) {
-        if (!tile || tile.removed) {
-          return false;
-        }
-
-        const leftBlocked = state.tiles.some(
-          (other) => !other.removed && other.slot === tile.slot - 1
-        );
-        const rightBlocked = state.tiles.some(
-          (other) => !other.removed && other.slot === tile.slot + 1
-        );
-
-        return !leftBlocked || !rightBlocked;
+      function getActiveBoardTiles() {
+        return state.boardTiles.filter((tile) => !tile.removing);
       }
 
-      function getFreeMatchingPairs() {
-        const freeTiles = state.tiles.filter((tile) => isTileFree(tile));
-        const pairs = [];
-
-        for (let index = 0; index < freeTiles.length; index += 1) {
-          for (let inner = index + 1; inner < freeTiles.length; inner += 1) {
-            if (freeTiles[index].key === freeTiles[inner].key) {
-              pairs.push([freeTiles[index], freeTiles[inner]]);
-            }
-          }
-        }
-
-        return pairs;
-      }
-
-      function updateStatus(text, win = false) {
+      function setMessage(text, win = false) {
+        state.message = text;
         statusTextEl.textContent = text;
         boardStatusEl.textContent = text;
-        statusTextEl.classList.toggle("win", win);
+        statusTextEl.style.color = win ? "var(--good)" : "var(--ink)";
+      }
+
+      function isCovered(tile) {
+        const slot = slots[tile.slotIndex];
+        return state.boardTiles.some((other) => {
+          if (other.id === tile.id || other.removing) {
+            return false;
+          }
+          const otherSlot = slots[other.slotIndex];
+          return (
+            otherSlot.z > slot.z &&
+            Math.abs(otherSlot.x - slot.x) < 52 &&
+            Math.abs(otherSlot.y - slot.y) < 60
+          );
+        });
+      }
+
+      function removeTrayTriples() {
+        let removedSomething = false;
+
+        while (true) {
+          const counts = new Map();
+          state.trayTiles.forEach((tile) => {
+            counts.set(tile.key, (counts.get(tile.key) || 0) + 1);
+          });
+
+          const tripleKey = [...counts.entries()].find((entry) => entry[1] >= 3)?.[0];
+          if (!tripleKey) {
+            break;
+          }
+
+          let removed = 0;
+          state.trayTiles = state.trayTiles.filter((tile) => {
+            if (tile.key === tripleKey && removed < 3) {
+              removed += 1;
+              removedSomething = true;
+              return false;
+            }
+            return true;
+          });
+        }
+
+        return removedSomething;
+      }
+
+      function checkEndState() {
+        if (state.gameOver) {
+          return;
+        }
+
+        if (state.boardTiles.length === 0) {
+          state.gameOver = true;
+          state.win = true;
+          setMessage("桌面麻将已清空，挑战成功。", true);
+          return;
+        }
+
+        if (state.trayTiles.length >= state.trayLimit) {
+          state.gameOver = true;
+          state.win = false;
+          setMessage("手牌区满了，这局摸鱼翻车了。");
+        }
+      }
+
+      function placeTileIntoTray(tileId) {
+        if (state.gameOver) {
+          return;
+        }
+
+        const tile = getBoardTileById(tileId);
+        if (!tile || isCovered(tile)) {
+          setMessage("这张麻将还被上层压着，先换一张。");
+          render();
+          return;
+        }
+
+        state.boardTiles = state.boardTiles.filter((item) => item.id !== tileId);
+        state.trayTiles.push({ ...tile });
+
+        const removed = removeTrayTriples();
+        if (removed) {
+          setMessage(`凑齐了 3 张 ${tile.name}，已经自动消除。`);
+        } else {
+          setMessage(`已将 ${tile.name} 放入手牌区。`);
+        }
+
+        checkEndState();
+        render();
+      }
+
+      function useRemoveThree() {
+        if (state.gameOver || state.toolUses.removeThree <= 0) {
+          return;
+        }
+
+        if (state.trayTiles.length < 3) {
+          setMessage("手牌区不足 3 张，暂时没法退回。");
+          render();
+          return;
+        }
+
+        const returning = state.trayTiles.splice(0, 3);
+        const usedSlots = new Set(state.boardTiles.map((tile) => tile.slotIndex));
+        const freeSlots = slots
+          .map((_, index) => index)
+          .filter((index) => !usedSlots.has(index))
+          .sort((a, b) => slots[b].z - slots[a].z || slots[a].y - slots[b].y || slots[a].x - slots[b].x);
+
+        returning.forEach((tile, index) => {
+          const slotIndex = freeSlots[index] ?? freeSlots[0] ?? index;
+          state.boardTiles.push({ ...tile, slotIndex, removing: false });
+        });
+
+        state.toolUses.removeThree -= 1;
+        setMessage("手牌区前 3 张已经退回桌面。");
+        render();
+      }
+
+      function activateBomb() {
+        if (state.gameOver || state.toolUses.bomb <= 0) {
+          return;
+        }
+
+        state.bombMode = true;
+        setMessage("炸弹已启动，点一张桌面麻将直接炸掉 3 张同类。");
+        render();
+      }
+
+      function useBomb(tileId) {
+        const sourceTile = getBoardTileById(tileId);
+        if (!sourceTile) {
+          return;
+        }
+
+        const matches = state.boardTiles.filter((tile) => tile.key === sourceTile.key).slice(0, 3);
+        if (matches.length < 3) {
+          state.bombMode = false;
+          setMessage("桌面上不足 3 张同类麻将，炸弹没能生效。");
+          render();
+          return;
+        }
+
+        const ids = new Set(matches.map((tile) => tile.id));
+        state.boardTiles = state.boardTiles.filter((tile) => !ids.has(tile.id));
+        state.toolUses.bomb -= 1;
+        state.bombMode = false;
+        setMessage(`炸弹生效，直接清掉了 3 张 ${sourceTile.name}。`);
+        checkEndState();
+        render();
+      }
+
+      function useShuffle() {
+        if (state.gameOver || state.toolUses.shuffle <= 0) {
+          return;
+        }
+
+        const shuffledSlots = shuffle(slots.map((_, index) => index)).slice(0, state.boardTiles.length);
+        state.boardTiles = shuffle(state.boardTiles).map((tile, index) => ({
+          ...tile,
+          slotIndex: shuffledSlots[index],
+        }));
+        state.toolUses.shuffle -= 1;
+        setMessage("桌面麻将已经重新打乱。");
+        render();
+      }
+
+      function openUnlockModal() {
+        if (state.unlockedExtraSlot) {
+          setMessage("第 8 格已经解锁了。");
+          render();
+          return;
+        }
+
+        qrModal.classList.add("open");
+        qrModal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeUnlockModal() {
+        qrModal.classList.remove("open");
+        qrModal.setAttribute("aria-hidden", "true");
+      }
+
+      function confirmUnlock() {
+        state.unlockedExtraSlot = true;
+        state.trayLimit = 8;
+        closeUnlockModal();
+        setMessage("第 8 格已解锁，手牌区上限变为 8。");
+        render();
       }
 
       function renderBoard() {
         boardEl.innerHTML = "";
-        const tilesBySlot = new Map(state.tiles.map((tile) => [tile.slot, tile]));
 
-        for (let slot = 0; slot < slotCount; slot += 1) {
-          const tile = tilesBySlot.get(slot);
+        const tiles = [...state.boardTiles].sort((a, b) => {
+          const slotA = slots[a.slotIndex];
+          const slotB = slots[b.slotIndex];
+          return slotA.z - slotB.z || slotA.y - slotB.y || slotA.x - slotB.x;
+        });
 
-          if (!tile || tile.removed) {
-            const spacer = document.createElement("div");
-            spacer.setAttribute("aria-hidden", "true");
-            boardEl.appendChild(spacer);
-            continue;
-          }
-
+        tiles.forEach((tile) => {
+          const slot = slots[tile.slotIndex];
           const button = document.createElement("button");
-          const free = isTileFree(tile);
+          const covered = isCovered(tile);
           button.type = "button";
           button.className = `tile theme-${tile.theme}`;
-          if (!free) {
-            button.classList.add("locked");
+          if (covered) {
+            button.classList.add("covered");
+          } else {
+            button.classList.add("available");
           }
-          if (state.selectedId === tile.id) {
-            button.classList.add("selected");
+          if (state.bombMode) {
+            button.classList.add("bomb-target");
           }
-          if (tile.removing) {
-            button.classList.add("removed");
-          }
-          if (tile.hint) {
-            button.classList.add("hint");
-          }
-          button.dataset.tileId = tile.id;
-          button.ariaLabel = `${tile.name}${free ? "，可点击" : "，当前被压住"}`;
+          button.style.left = `${slot.x}px`;
+          button.style.top = `${slot.y - slot.z * 10}px`;
+          button.style.zIndex = String(slot.z * 10 + Math.floor(slot.y));
           button.innerHTML = `
-            <span class="tile-inner">
+            <span class="tile-face">
               <span class="tile-glyph">${tile.glyph}</span>
               <span class="tile-name">${tile.name}</span>
             </span>
           `;
-          button.addEventListener("click", () => handleTileClick(tile.id));
+          button.addEventListener("click", () => {
+            if (state.gameOver) {
+              return;
+            }
+            if (state.bombMode) {
+              useBomb(tile.id);
+            } else {
+              placeTileIntoTray(tile.id);
+            }
+          });
           boardEl.appendChild(button);
-        }
-
-        remainingCountEl.textContent = String(getRemainingTiles().length);
-        matchCountEl.textContent = String(state.matchCount);
-      }
-
-      function clearHints() {
-        state.tiles.forEach((tile) => {
-          tile.hint = false;
         });
       }
 
-      function createBoard() {
-        const tiles = shuffle(baseDeck).map((tile, index) => ({
-          ...tile,
-          slot: index,
-          removed: false,
-          removing: false,
-          hint: false,
-        }));
+      function renderTray() {
+        trayEl.innerHTML = "";
 
-        state = {
-          tiles,
-          selectedId: null,
-          matchCount: 0,
-          locked: false,
-        };
+        for (let index = 0; index < 8; index += 1) {
+          const slot = document.createElement("div");
+          slot.className = "tray-slot";
 
-        updateStatus("看看哪两张先有缘分。");
-        renderBoard();
-      }
-
-      function reshuffleRemaining() {
-        if (state.locked) {
-          return;
-        }
-
-        const remaining = shuffle(getRemainingTiles());
-        const slots = remaining.map((tile) => tile.slot).sort((a, b) => a - b);
-
-        remaining.forEach((tile, index) => {
-          tile.slot = slots[index];
-        });
-
-        state.selectedId = null;
-        clearHints();
-        updateStatus("已重新洗牌，继续摸牌。");
-        renderBoard();
-      }
-
-      function markHint() {
-        if (state.locked) {
-          return;
-        }
-
-        clearHints();
-        const pairs = getFreeMatchingPairs();
-
-        if (pairs.length === 0) {
-          updateStatus("当前没有可消对子了，试试重新洗牌。");
-          renderBoard();
-          return;
-        }
-
-        const [first, second] = pairs[Math.floor(Math.random() * pairs.length)];
-        first.hint = true;
-        second.hint = true;
-        updateStatus(`提示：试试 ${first.name} 这一对。`);
-        renderBoard();
-      }
-
-      function finishMatch(first, second) {
-        state.locked = true;
-        first.removing = true;
-        second.removing = true;
-        renderBoard();
-
-        window.setTimeout(() => {
-          first.removed = true;
-          second.removed = true;
-          first.removing = false;
-          second.removing = false;
-          state.selectedId = null;
-          state.matchCount += 1;
-          state.locked = false;
-          clearHints();
-
-          const remaining = getRemainingTiles().length;
-          if (remaining === 0) {
-            updateStatus("清台成功，今天的摸鱼战绩很体面。", true);
-          } else if (getFreeMatchingPairs().length === 0) {
-            updateStatus("场上暂时没对子了，洗一洗继续。");
-          } else {
-            updateStatus(`消掉一对 ${first.name}，继续找下一组。`);
+          if (index === 7 && !state.unlockedExtraSlot) {
+            slot.classList.add("locked-slot");
+            slot.innerHTML = "<strong>🔒</strong>";
+            trayEl.appendChild(slot);
+            continue;
           }
 
-          renderBoard();
-        }, 180);
+          const tile = state.trayTiles[index];
+          if (tile) {
+            slot.classList.add("filled");
+            slot.innerHTML = `
+              <div class="tray-tile theme-${tile.theme}">
+                <div>
+                  <div class="tray-glyph">${tile.glyph}</div>
+                  <div class="tray-name">${tile.name}</div>
+                </div>
+              </div>
+            `;
+          }
+
+          trayEl.appendChild(slot);
+        }
       }
 
-      function handleTileClick(tileId) {
-        if (state.locked) {
-          return;
-        }
+      function renderSidebar() {
+        boardCountEl.textContent = String(state.boardTiles.length);
+        trayCountEl.textContent = `${state.trayTiles.length} / ${state.trayLimit}`;
+        trayStatusEl.textContent = `当前上限 ${state.trayLimit} 格`;
+        removeThreeCountEl.textContent = String(state.toolUses.removeThree);
+        bombCountEl.textContent = String(state.toolUses.bomb);
+        shuffleCountEl.textContent = String(state.toolUses.shuffle);
+        unlockCountEl.textContent = state.unlockedExtraSlot ? "开" : "锁";
 
-        clearHints();
-        const tile = getTileById(tileId);
-
-        if (!isTileFree(tile)) {
-          state.selectedId = null;
-          updateStatus("这张牌两边都被卡住了，先找外露的。");
-          renderBoard();
-          return;
-        }
-
-        if (state.selectedId === tileId) {
-          state.selectedId = null;
-          updateStatus("已取消选择。");
-          renderBoard();
-          return;
-        }
-
-        if (!state.selectedId) {
-          state.selectedId = tileId;
-          updateStatus(`已选中 ${tile.name}，再找一张同样的。`);
-          renderBoard();
-          return;
-        }
-
-        const selectedTile = getTileById(state.selectedId);
-        if (!selectedTile || selectedTile.removed) {
-          state.selectedId = null;
-          renderBoard();
-          return;
-        }
-
-        if (selectedTile.key !== tile.key) {
-          state.selectedId = tileId;
-          updateStatus("牌型不同，已经帮你切换到新选择。");
-          renderBoard();
-          return;
-        }
-
-        finishMatch(selectedTile, tile);
+        removeThreeButton.disabled = state.toolUses.removeThree <= 0 || state.trayTiles.length < 3 || state.gameOver;
+        bombButton.disabled = state.toolUses.bomb <= 0 || state.gameOver;
+        shuffleButton.disabled = state.toolUses.shuffle <= 0 || state.gameOver;
+        unlockButton.disabled = state.unlockedExtraSlot;
       }
 
-      restartButton.addEventListener("click", createBoard);
-      shuffleButton.addEventListener("click", reshuffleRemaining);
-      hintButton.addEventListener("click", markHint);
+      function render() {
+        renderBoard();
+        renderTray();
+        renderSidebar();
+      }
 
-      createBoard();
+      restartButton.addEventListener("click", () => {
+        resetState();
+        setMessage("新的一局开始了，先挑上层的牌。");
+        render();
+      });
+
+      removeThreeButton.addEventListener("click", useRemoveThree);
+      bombButton.addEventListener("click", activateBomb);
+      shuffleButton.addEventListener("click", useShuffle);
+      unlockButton.addEventListener("click", openUnlockModal);
+      closeModalButton.addEventListener("click", closeUnlockModal);
+      confirmUnlockButton.addEventListener("click", confirmUnlock);
+      qrModal.addEventListener("click", (event) => {
+        if (event.target === qrModal) {
+          closeUnlockModal();
+        }
+      });
+
+      resetState();
+      setMessage("选一张没有被压住的麻将开始摸鱼。");
+      render();
     </script>
   </body>
 </html>
