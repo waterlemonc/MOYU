@@ -278,6 +278,7 @@
         prevX: 0,
         prevY: 0,
         hue: 0,
+        stillness: 0,
       };
 
       function clamp(value, min, max) {
@@ -441,6 +442,7 @@
 
         const angleJitter = (Math.random() - 0.5) * 0.8;
         const speed = 0.5 + Math.random() * 1.6 + strength * 0.025;
+        const verticalBonus = ((height - y) / Math.max(height, 1)) * 90;
         const hue = brush.rainbow
           ? (pointer.hue + Math.random() * 34) % 360
           : (brush.hue + (Math.random() - 0.5) * 12 + 360) % 360;
@@ -457,7 +459,7 @@
           vx: dx * (0.05 + Math.random() * 0.02) + Math.cos(angleJitter) * speed,
           vy: dy * (0.04 + Math.random() * 0.02) - 0.8 + Math.sin(angleJitter) * speed,
           radius: 1.5 + Math.random() * 2.1,
-          life: 70 + Math.random() * 38,
+          life: 120 + verticalBonus + Math.random() * 50,
           color: `hsl(${hue} ${saturation}% ${lightness}%)`,
         });
       }
@@ -479,8 +481,14 @@
         const distance = Math.hypot(dx, dy);
 
         if (distance < 0.8) {
+          pointer.stillness += 1;
+          if (pointer.stillness % 5 === 0) {
+            spawnBurst(pointer.x, pointer.y, 0, 0, 20);
+          }
           return;
         }
+
+        pointer.stillness = 0;
 
         const steps = Math.max(1, Math.ceil(distance / 16));
         for (let step = 0; step <= steps; step += 1) {
@@ -504,7 +512,11 @@
           particle.vy += 0.09 * deltaFactor;
           particle.x += particle.vx * deltaFactor;
           particle.y += particle.vy * deltaFactor;
-          particle.life -= 1.15 * deltaFactor;
+          if (particle.y > height * 0.72) {
+            particle.life -= 0.45 * deltaFactor;
+          } else {
+            particle.life -= 0.12 * deltaFactor;
+          }
 
           if (particle.x < 0 || particle.x > width) {
             particle.vx *= -0.68;
@@ -594,8 +606,9 @@
         pointer.active = true;
         pointer.prevX = clientX;
         pointer.prevY = clientY;
+        pointer.stillness = 0;
         setPointerPosition(clientX, clientY);
-        spawnBurst(clientX, clientY, 0, 0, 12);
+        spawnBurst(clientX, clientY, 0, 0, 34);
       }
 
       function pointerMove(clientX, clientY) {
@@ -619,6 +632,9 @@
       window.addEventListener("resize", resize);
 
       canvas.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) {
+          return;
+        }
         canvas.setPointerCapture(event.pointerId);
         pointerDown(event.clientX, event.clientY);
       });
@@ -629,10 +645,12 @@
 
       canvas.addEventListener("pointerup", () => {
         pointer.active = false;
+        pointer.stillness = 0;
       });
 
       canvas.addEventListener("pointercancel", () => {
         pointer.active = false;
+        pointer.stillness = 0;
       });
 
       canvas.addEventListener("pointerleave", () => {
@@ -640,6 +658,7 @@
           return;
         }
         pointer.active = false;
+        pointer.stillness = 0;
       });
 
       resize();
