@@ -58,6 +58,7 @@
 
       .panel {
         min-width: min(440px, calc(100vw - 36px));
+        pointer-events: auto;
       }
 
       .eyebrow {
@@ -85,6 +86,77 @@
         flex-wrap: wrap;
         gap: 10px;
         margin-top: 14px;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .control-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .control-label {
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .color-picker {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .toggle {
+        appearance: none;
+        position: relative;
+        width: 48px;
+        height: 28px;
+        border-radius: 999px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.18);
+        cursor: pointer;
+        transition: background 160ms ease;
+      }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fffaf4;
+        transition: transform 160ms ease;
+      }
+
+      .toggle:checked {
+        background: rgba(255, 213, 141, 0.72);
+      }
+
+      .toggle:checked::after {
+        transform: translateX(20px);
+      }
+
+      .current-color {
+        min-width: 72px;
+        font-size: 0.9rem;
+        color: var(--text);
       }
 
       .pill {
@@ -138,6 +210,18 @@
         <p class="eyebrow">MOYU SAND STUDIO</p>
         <h1>彩砂流动画板</h1>
         <p>按住鼠标点击或滑动，屏幕会喷出彩色线条与粒子。彩砂会在重力作用下落到底端，并在底部慢慢堆出一条发光沙丘。</p>
+        <div class="controls">
+          <label class="control-group" for="color-picker">
+            <span class="control-label">画笔颜色</span>
+            <input class="color-picker" id="color-picker" type="color" value="#ff8b5e" />
+            <span class="current-color" id="current-color">暖橘</span>
+          </label>
+
+          <label class="control-group" for="rainbow-toggle">
+            <span class="control-label">彩虹模式</span>
+            <input class="toggle" id="rainbow-toggle" type="checkbox" checked />
+          </label>
+        </div>
         <div class="stats">
           <span class="pill" id="grain-count">活跃粒子 0</span>
           <span class="pill" id="pile-count">堆积沙粒 0</span>
@@ -157,6 +241,9 @@
       const grainCountEl = document.getElementById("grain-count");
       const pileCountEl = document.getElementById("pile-count");
       const fpsCountEl = document.getElementById("fps-count");
+      const colorPicker = document.getElementById("color-picker");
+      const currentColorEl = document.getElementById("current-color");
+      const rainbowToggle = document.getElementById("rainbow-toggle");
 
       const backgroundCanvas = document.createElement("canvas");
       const backgroundCtx = backgroundCanvas.getContext("2d", { alpha: false });
@@ -177,6 +264,13 @@
       let pileHeights = [];
 
       const particles = [];
+      const brush = {
+        rainbow: true,
+        hex: "#ff8b5e",
+        hue: 18,
+        saturation: 100,
+        lightness: 68,
+      };
       const pointer = {
         active: false,
         x: 0,
@@ -188,6 +282,57 @@
 
       function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
+      }
+
+      function hexToHsl(hex) {
+        const normalized = hex.replace("#", "");
+        const value = normalized.length === 3
+          ? normalized.split("").map((part) => part + part).join("")
+          : normalized;
+        const r = parseInt(value.slice(0, 2), 16) / 255;
+        const g = parseInt(value.slice(2, 4), 16) / 255;
+        const b = parseInt(value.slice(4, 6), 16) / 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0;
+        let s = 0;
+        const l = (max + min) / 2;
+        const delta = max - min;
+
+        if (delta !== 0) {
+          s = delta / (1 - Math.abs(2 * l - 1));
+
+          switch (max) {
+            case r:
+              h = 60 * (((g - b) / delta) % 6);
+              break;
+            case g:
+              h = 60 * ((b - r) / delta + 2);
+              break;
+            default:
+              h = 60 * ((r - g) / delta + 4);
+              break;
+          }
+        }
+
+        return {
+          hue: (h + 360) % 360,
+          saturation: Math.round(s * 100),
+          lightness: Math.round(l * 100),
+        };
+      }
+
+      function updateBrushFromHex(hex) {
+        brush.hex = hex;
+        const hsl = hexToHsl(hex);
+        brush.hue = hsl.hue;
+        brush.saturation = Math.max(60, hsl.saturation);
+        brush.lightness = Math.max(48, hsl.lightness);
+      }
+
+      function updateColorLabel() {
+        currentColorEl.textContent = brush.rainbow ? "彩虹" : brush.hex.toUpperCase();
       }
 
       function resize() {
@@ -296,7 +441,13 @@
 
         const angleJitter = (Math.random() - 0.5) * 0.8;
         const speed = 0.5 + Math.random() * 1.6 + strength * 0.025;
-        const hue = (pointer.hue + Math.random() * 34) % 360;
+        const hue = brush.rainbow
+          ? (pointer.hue + Math.random() * 34) % 360
+          : (brush.hue + (Math.random() - 0.5) * 12 + 360) % 360;
+        const saturation = brush.rainbow ? 92 : clamp(brush.saturation + 8, 70, 100);
+        const lightness = brush.rainbow
+          ? 60 + Math.random() * 12
+          : clamp(brush.lightness + Math.random() * 8 - 4, 48, 76);
 
         particles.push({
           x,
@@ -307,7 +458,7 @@
           vy: dy * (0.04 + Math.random() * 0.02) - 0.8 + Math.sin(angleJitter) * speed,
           radius: 1.5 + Math.random() * 2.1,
           life: 70 + Math.random() * 38,
-          color: `hsl(${hue} 92% ${60 + Math.random() * 12}%)`,
+          color: `hsl(${hue} ${saturation}% ${lightness}%)`,
         });
       }
 
@@ -455,6 +606,16 @@
         setPointerPosition(clientX, clientY);
       }
 
+      colorPicker.addEventListener("input", (event) => {
+        updateBrushFromHex(event.target.value);
+        updateColorLabel();
+      });
+
+      rainbowToggle.addEventListener("change", (event) => {
+        brush.rainbow = event.target.checked;
+        updateColorLabel();
+      });
+
       window.addEventListener("resize", resize);
 
       canvas.addEventListener("pointerdown", (event) => {
@@ -482,6 +643,8 @@
       });
 
       resize();
+      updateBrushFromHex(colorPicker.value);
+      updateColorLabel();
       animate(0);
     </script>
   </body>
