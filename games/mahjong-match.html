@@ -838,6 +838,9 @@
         { ...tile, id: `${tile.key}-2`, order: index * 3 + 2 },
         { ...tile, id: `${tile.key}-3`, order: index * 3 + 3 },
       ]);
+      const TILE_WIDTH = 72;
+      const TILE_HEIGHT = 96;
+      const TILE_FACE_INSET = 10;
 
       const slots = [
         { x: 40, y: 48, z: 0 }, { x: 118, y: 48, z: 0 }, { x: 196, y: 48, z: 0 }, { x: 274, y: 48, z: 0 }, { x: 352, y: 48, z: 0 }, { x: 430, y: 48, z: 0 }, { x: 508, y: 48, z: 0 }, { x: 586, y: 48, z: 0 },
@@ -898,18 +901,43 @@
         statusTextEl.style.color = win ? "var(--good)" : "var(--ink)";
       }
 
-      function isCovered(tile) {
+      function getTileRect(tile) {
         const slot = slots[tile.slotIndex];
+        return {
+          left: slot.x,
+          top: slot.y - slot.z * 10,
+          right: slot.x + TILE_WIDTH,
+          bottom: slot.y - slot.z * 10 + TILE_HEIGHT,
+        };
+      }
+
+      function getTileFaceRect(tile) {
+        const rect = getTileRect(tile);
+        return {
+          left: rect.left + TILE_FACE_INSET,
+          top: rect.top + TILE_FACE_INSET,
+          right: rect.right - TILE_FACE_INSET,
+          bottom: rect.bottom - TILE_FACE_INSET,
+        };
+      }
+
+      function isCovered(tile) {
+        const faceRect = getTileFaceRect(tile);
         return state.boardTiles.some((other) => {
           if (other.id === tile.id || other.removing) {
             return false;
           }
           const otherSlot = slots[other.slotIndex];
-          return (
-            otherSlot.z > slot.z &&
-            Math.abs(otherSlot.x - slot.x) < 52 &&
-            Math.abs(otherSlot.y - slot.y) < 60
-          );
+          const tileSlot = slots[tile.slotIndex];
+          if (otherSlot.z <= tileSlot.z) {
+            return false;
+          }
+
+          const otherRect = getTileRect(other);
+          const overlapX = Math.min(faceRect.right, otherRect.right) - Math.max(faceRect.left, otherRect.left);
+          const overlapY = Math.min(faceRect.bottom, otherRect.bottom) - Math.max(faceRect.top, otherRect.top);
+
+          return overlapX > 18 && overlapY > 18;
         });
       }
 
