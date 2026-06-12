@@ -13,6 +13,9 @@
         --panel: rgba(255, 250, 242, 0.88);
         --line: rgba(42, 55, 63, 0.12);
         --shadow: 0 24px 60px rgba(55, 44, 28, 0.18);
+        --gold: #f0c066;
+        --wood: #9e5b26;
+        --wood-deep: #77411c;
       }
 
       * {
@@ -113,6 +116,9 @@
         padding: 18px;
         border-radius: 28px;
         background:
+          radial-gradient(circle at 8% 10%, rgba(226, 255, 180, 0.34), transparent 12%),
+          radial-gradient(circle at 92% 8%, rgba(255, 239, 146, 0.22), transparent 14%),
+          radial-gradient(circle at 96% 18%, rgba(80, 126, 67, 0.28), transparent 12%),
           radial-gradient(circle at 22% 72%, rgba(255, 255, 255, 0.14), transparent 10%),
           radial-gradient(circle at 66% 30%, rgba(255, 255, 255, 0.14), transparent 10%),
           linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
@@ -133,10 +139,44 @@
         min-height: 720px;
         border-radius: 26px;
         background:
+          radial-gradient(circle at 18% 82%, rgba(255, 255, 255, 0.16), transparent 10%),
+          radial-gradient(circle at 74% 66%, rgba(255, 255, 255, 0.14), transparent 9%),
           radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.18), transparent 28%),
           radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.12), transparent 18%),
           linear-gradient(180deg, rgba(130, 210, 120, 0.42), rgba(80, 170, 92, 0.18));
         border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+      }
+
+      .board-area::before,
+      .board-area::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0.34;
+      }
+
+      .board-area::before {
+        left: -38px;
+        top: -16px;
+        width: 160px;
+        height: 160px;
+        background:
+          radial-gradient(circle, rgba(246, 255, 188, 0.48) 0 24%, transparent 26%),
+          radial-gradient(circle at 68% 28%, rgba(77, 149, 69, 0.5) 0 20%, transparent 22%),
+          radial-gradient(circle at 50% 70%, rgba(103, 172, 84, 0.62) 0 52%, transparent 54%);
+      }
+
+      .board-area::after {
+        right: -52px;
+        top: -8px;
+        width: 190px;
+        height: 170px;
+        background:
+          radial-gradient(circle at 32% 22%, rgba(242, 255, 176, 0.42) 0 20%, transparent 22%),
+          radial-gradient(circle at 66% 54%, rgba(77, 139, 72, 0.42) 0 22%, transparent 24%),
+          radial-gradient(circle at 48% 50%, rgba(97, 164, 81, 0.54) 0 54%, transparent 56%);
       }
 
       .board-header {
@@ -149,6 +189,8 @@
 
       .board-header h2 {
         font-size: 1.1rem;
+        color: #fdf8ee;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       }
 
       .status {
@@ -173,18 +215,28 @@
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.92),
           0 8px 16px rgba(64, 50, 31, 0.18);
+        transition: transform 140ms ease, box-shadow 140ms ease, opacity 160ms ease, filter 160ms ease;
       }
 
       .tile::before {
         content: "";
         position: absolute;
-        inset: -6px 0 auto auto;
+        inset: -4px 0 auto auto;
         width: 100%;
         height: 100%;
         border-radius: 16px;
         background: linear-gradient(180deg, rgba(70, 70, 70, 0.7), rgba(120, 120, 120, 0.45));
         transform: translate(0, -8px);
         z-index: -1;
+      }
+
+      .tile::after {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: 12px;
+        border: 1px solid rgba(180, 161, 132, 0.28);
+        pointer-events: none;
       }
 
       .tile-face {
@@ -217,6 +269,9 @@
 
       .tile.available:hover {
         transform: translateY(-4px);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.96),
+          0 14px 22px rgba(64, 50, 31, 0.22);
       }
 
       .tile.bomb-target {
@@ -256,8 +311,9 @@
       .tray-panel {
         padding: 14px 16px 16px;
         border-radius: 24px;
-        background: rgba(118, 70, 28, 0.84);
-        border: 3px solid rgba(236, 173, 87, 0.66);
+        background:
+          linear-gradient(180deg, rgba(182, 112, 50, 0.96), rgba(127, 72, 27, 0.96));
+        border: 3px solid rgba(241, 189, 96, 0.72);
         box-shadow: 0 16px 28px rgba(78, 43, 16, 0.24);
       }
 
@@ -279,11 +335,12 @@
       .tray-slot {
         min-height: 86px;
         border-radius: 16px;
-        background: rgba(78, 43, 16, 0.28);
+        background: rgba(83, 47, 18, 0.36);
         border: 2px dashed rgba(255, 228, 182, 0.14);
         display: grid;
         place-items: center;
         position: relative;
+        box-shadow: inset 0 2px 6px rgba(51, 24, 6, 0.22);
       }
 
       .tray-slot.filled {
@@ -372,6 +429,19 @@
         background: rgba(255, 255, 255, 0.82);
         border: 1px solid rgba(42, 55, 63, 0.08);
         color: var(--ink);
+        padding: 14px 16px;
+      }
+
+      .tool-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, #f6d27c, #de9f32);
+        color: #6b390d;
+        font-size: 1.2rem;
+        box-shadow: inset 0 1px 0 rgba(255, 248, 213, 0.7);
       }
 
       .tool-copy {
@@ -466,6 +536,21 @@
         width: 100%;
         height: 100%;
         display: block;
+      }
+
+      .qr-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: none;
+      }
+
+      .qr-image.ready {
+        display: block;
+      }
+
+      .qr-fallback.hidden {
+        display: none;
       }
 
       .modal-actions {
@@ -588,6 +673,7 @@
               <h3>辅助功能</h3>
               <div class="tools">
                 <button class="tool-button" id="remove-three-button" type="button">
+                  <span class="tool-icon" aria-hidden="true">↩</span>
                   <span class="tool-copy">
                     <strong>移除三张</strong>
                     <span>把手牌区最前面的 3 张退回桌面</span>
@@ -596,6 +682,7 @@
                 </button>
 
                 <button class="tool-button" id="bomb-button" type="button">
+                  <span class="tool-icon" aria-hidden="true">💣</span>
                   <span class="tool-copy">
                     <strong>强力炸弹</strong>
                     <span>点一张桌面牌，直接炸掉 3 张同类</span>
@@ -604,6 +691,7 @@
                 </button>
 
                 <button class="tool-button" id="shuffle-button" type="button">
+                  <span class="tool-icon" aria-hidden="true">⟳</span>
                   <span class="tool-copy">
                     <strong>随机打乱</strong>
                     <span>把桌面剩余麻将重新随机摆放</span>
@@ -612,6 +700,7 @@
                 </button>
 
                 <button class="tool-button" id="unlock-button" type="button">
+                  <span class="tool-icon" aria-hidden="true">🔓</span>
                   <span class="tool-copy">
                     <strong>解锁第 8 格</strong>
                     <span>弹出二维码提示关注公众号“摸鱼小宇宙”</span>
@@ -636,7 +725,8 @@
         <p>关注公众号“摸鱼小宇宙”即可解锁额外手牌格。这里先给你保留了弹窗与二维码展示位。</p>
 
         <div class="qr-frame">
-          <svg class="qr-art" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-label="二维码示意图">
+          <img class="qr-image" id="qr-image" src="./assets/moyu-xiaoyuzhou-qr.jpg" alt="摸鱼小宇宙公众号二维码" />
+          <svg class="qr-art qr-fallback" id="qr-fallback" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-label="二维码示意图">
             <rect width="320" height="320" fill="#fff" />
             <g fill="#111">
               <rect x="18" y="18" width="72" height="72" />
@@ -696,7 +786,7 @@
           </svg>
         </div>
 
-        <p class="footer-note">说明：这里先放的是站内示意二维码位。如果你想换成你提供的那张真实二维码图，我可以下一步再替换成正式资源。</p>
+        <p class="footer-note">默认会优先加载 `games/assets/moyu-xiaoyuzhou-qr.jpg`。如果该文件不存在，就会自动回退到站内示意图。</p>
 
         <div class="modal-actions">
           <button class="secondary" id="close-modal-button" type="button">先看看</button>
@@ -725,6 +815,8 @@
       const qrModal = document.getElementById("qr-modal");
       const closeModalButton = document.getElementById("close-modal-button");
       const confirmUnlockButton = document.getElementById("confirm-unlock-button");
+      const qrImage = document.getElementById("qr-image");
+      const qrFallback = document.getElementById("qr-fallback");
 
       const tileDefs = [
         { key: "bamboo-1", glyph: "竹", name: "青竹", theme: "bamboo" },
@@ -986,6 +1078,18 @@
         qrModal.setAttribute("aria-hidden", "true");
       }
 
+      function setupQrAsset() {
+        qrImage.addEventListener("load", () => {
+          qrImage.classList.add("ready");
+          qrFallback.classList.add("hidden");
+        });
+
+        qrImage.addEventListener("error", () => {
+          qrImage.classList.remove("ready");
+          qrFallback.classList.remove("hidden");
+        });
+      }
+
       function confirmUnlock() {
         state.unlockedExtraSlot = true;
         state.trayLimit = 8;
@@ -1110,6 +1214,7 @@
         }
       });
 
+      setupQrAsset();
       resetState();
       setMessage("选一张没有被压住的麻将开始摸鱼。");
       render();
