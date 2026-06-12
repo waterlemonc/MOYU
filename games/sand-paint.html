@@ -468,10 +468,11 @@
 
       function spawnBurst(x, y, movementX, movementY, distance) {
         const loadFactor = particles.length / maxParticles;
-        const densityFactor = loadFactor > 0.82 ? 0.35 : loadFactor > 0.65 ? 0.55 : 1;
+        const densityFactor = loadFactor > 0.88 ? 0.45 : loadFactor > 0.72 ? 0.7 : 1;
+        const speedBonus = Math.min(10, Math.floor(distance / 10));
         const burst = Math.max(
           2,
-          Math.round((burstMin + Math.min(burstMax, Math.floor(distance / 18))) * densityFactor)
+          Math.round((burstMin + Math.min(burstMax + speedBonus, Math.floor(distance / 12))) * densityFactor)
         );
 
         for (let i = 0; i < burst; i += 1) {
@@ -501,7 +502,7 @@
 
         pointer.stillness = 0;
 
-        const steps = Math.max(1, Math.ceil(distance / 16));
+        const steps = Math.max(1, Math.ceil(distance / 10));
         for (let step = 0; step <= steps; step += 1) {
           const t = step / steps;
           const px = pointer.prevX + dx * t;
