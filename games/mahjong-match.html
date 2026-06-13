@@ -94,6 +94,16 @@
         transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
       }
 
+      button:focus {
+        outline: none;
+      }
+
+      button:focus-visible,
+      a.button-link:focus-visible {
+        outline: 3px solid rgba(255, 245, 196, 0.92);
+        outline-offset: 2px;
+      }
+
       button:hover,
       a.button-link:hover {
         transform: translateY(-2px);
@@ -193,6 +203,21 @@
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       }
 
+      .level-pill {
+        display: inline-flex;
+        align-items: center;
+        margin-top: 8px;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(255, 248, 210, 0.18);
+        color: rgba(255, 248, 224, 0.96);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+      }
+
       .status {
         color: rgba(255, 255, 255, 0.92);
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
@@ -200,10 +225,8 @@
 
       .board {
         position: relative;
-        height: 560px;
+        height: 500px;
         margin: 8px 12px 0;
-        transform: scale(0.9);
-        transform-origin: top left;
       }
 
       .tile {
@@ -219,6 +242,7 @@
           0 8px 16px rgba(64, 50, 31, 0.18);
         transition: transform 140ms ease, box-shadow 140ms ease, opacity 160ms ease, filter 160ms ease;
         overflow: hidden;
+        will-change: transform;
       }
 
       .tile::before {
@@ -261,7 +285,7 @@
       }
 
       .tile.covered {
-        filter: grayscale(0.08) brightness(0.92);
+        filter: saturate(0.86) brightness(0.94);
         cursor: not-allowed;
       }
 
@@ -573,17 +597,13 @@
         }
 
         .board {
-          height: 490px;
+          height: 420px;
           margin: 8px 6px 0;
         }
 
         .tile {
           width: 56px;
           height: 76px;
-        }
-
-        .tile-glyph {
-          font-size: 1.45rem;
         }
 
         .tray {
@@ -607,7 +627,7 @@
         <div>
           <p class="eyebrow">MOYU MAHJONG</p>
           <h1>麻将消消乐</h1>
-          <p>从桌面里挑牌放入手牌槽，凑齐 3 张相同麻将就会自动消除。桌面清空即挑战成功，手牌槽爆满则挑战失败。</p>
+          <p>现在改成两关挑战模式：第一关偏简单，第二关更接近羊了个羊式的层叠压牌。凑齐 3 张相同麻将会自动消除，两关全部清空后会记录本次用时。</p>
         </div>
 
         <div class="top-actions">
@@ -620,7 +640,10 @@
         <div class="layout">
           <section class="board-area">
             <div class="board-header">
-              <h2>桌面区</h2>
+              <div>
+                <h2>桌面区</h2>
+                <span class="level-pill" id="level-pill">第 1 关 · 热身局</span>
+              </div>
               <span class="status" id="board-status">选一张没有被压住的麻将开始摸鱼。</span>
             </div>
 
@@ -641,12 +664,24 @@
             <section class="panel">
               <div class="stats">
                 <div class="stat">
+                  <span>当前关卡</span>
+                  <strong id="level-label">第 1 关</strong>
+                </div>
+                <div class="stat">
                   <span>桌面剩余</span>
                   <strong id="board-count">0</strong>
                 </div>
                 <div class="stat">
                   <span>手牌数量</span>
                   <strong id="tray-count">0 / 7</strong>
+                </div>
+                <div class="stat">
+                  <span>挑战计时</span>
+                  <strong id="timer-text">00:00</strong>
+                </div>
+                <div class="stat">
+                  <span>最佳记录</span>
+                  <strong id="best-time">--</strong>
                 </div>
                 <div class="stat">
                   <span>当前状态</span>
@@ -698,7 +733,7 @@
 
             <section class="panel tips">
               <strong>规则说明</strong>
-              只有没有被上层压住的麻将可以点击。凑齐 3 张相同麻将会自动清除。手牌达到当前上限且没有组成三消时，本局立即失败。
+              只有没有被上层真正压住的麻将才可以点击。第一关用来热身，第二关会更复杂。两关都清空就算通关，手牌达到当前上限且没有触发三消时，本次挑战立即失败。
             </section>
           </aside>
         </div>
@@ -789,6 +824,10 @@
       const statusTextEl = document.getElementById("status-text");
       const boardStatusEl = document.getElementById("board-status");
       const trayStatusEl = document.getElementById("tray-status");
+      const levelLabelEl = document.getElementById("level-label");
+      const levelPillEl = document.getElementById("level-pill");
+      const timerTextEl = document.getElementById("timer-text");
+      const bestTimeEl = document.getElementById("best-time");
       const restartButton = document.getElementById("restart-button");
       const removeThreeButton = document.getElementById("remove-three-button");
       const bombButton = document.getElementById("bomb-button");
@@ -804,6 +843,12 @@
       const qrImage = document.getElementById("qr-image");
       const qrFallback = document.getElementById("qr-fallback");
 
+      const BEST_TIME_STORAGE_KEY = "moyu-mahjong-best-run-ms-v1";
+      const TILE_WIDTH = 72;
+      const TILE_HEIGHT = 96;
+      const TILE_FACE_INSET = 14;
+      let timerIntervalId = null;
+
       const tileDefs = [
         { key: "bamboo-1", name: "一索", image: "./assets/mahjong-tiles/Sou1.png" },
         { key: "bamboo-2", name: "三索", image: "./assets/mahjong-tiles/Sou3.png" },
@@ -818,27 +863,112 @@
         { key: "dragon-1", name: "红中", image: "./assets/mahjong-tiles/Chun.png" },
         { key: "dragon-2", name: "发财", image: "./assets/mahjong-tiles/Hatsu.png" },
       ];
+      const tileMap = Object.fromEntries(tileDefs.map((tile) => [tile.key, tile]));
 
-      const baseTiles = tileDefs.flatMap((tile, index) => [
-        { ...tile, id: `${tile.key}-1`, order: index * 3 + 1 },
-        { ...tile, id: `${tile.key}-2`, order: index * 3 + 2 },
-        { ...tile, id: `${tile.key}-3`, order: index * 3 + 3 },
-      ]);
-      const TILE_WIDTH = 72;
-      const TILE_HEIGHT = 96;
-      const TILE_FACE_INSET = 12;
+      function makeRow(startX, y, z, count, step = 86) {
+        return Array.from({ length: count }, (_, index) => ({
+          x: startX + index * step,
+          y,
+          z,
+        }));
+      }
 
-      const slots = [
-        { x: 24, y: 34, z: 0 }, { x: 122, y: 34, z: 0 }, { x: 220, y: 34, z: 0 }, { x: 318, y: 34, z: 0 }, { x: 416, y: 34, z: 0 }, { x: 514, y: 34, z: 0 }, { x: 612, y: 34, z: 0 }, { x: 710, y: 34, z: 0 },
-        { x: 72, y: 124, z: 0 }, { x: 170, y: 124, z: 0 }, { x: 268, y: 124, z: 0 }, { x: 366, y: 124, z: 0 }, { x: 464, y: 124, z: 0 }, { x: 562, y: 124, z: 0 }, { x: 660, y: 124, z: 0 },
-        { x: 24, y: 224, z: 0 }, { x: 122, y: 224, z: 0 }, { x: 220, y: 224, z: 0 }, { x: 318, y: 224, z: 0 }, { x: 416, y: 224, z: 0 }, { x: 514, y: 224, z: 0 }, { x: 612, y: 224, z: 0 }, { x: 710, y: 224, z: 0 },
-        { x: 72, y: 324, z: 0 }, { x: 170, y: 324, z: 0 }, { x: 268, y: 324, z: 0 }, { x: 366, y: 324, z: 0 }, { x: 464, y: 324, z: 0 }, { x: 562, y: 324, z: 0 }, { x: 660, y: 324, z: 0 },
-        { x: 146, y: 88, z: 1 }, { x: 244, y: 88, z: 1 }, { x: 342, y: 88, z: 1 }, { x: 440, y: 88, z: 1 }, { x: 538, y: 88, z: 1 }, { x: 636, y: 88, z: 1 },
-        { x: 146, y: 188, z: 1 }, { x: 244, y: 188, z: 1 }, { x: 342, y: 188, z: 1 }, { x: 440, y: 188, z: 1 }, { x: 538, y: 188, z: 1 }, { x: 636, y: 188, z: 1 },
-        { x: 218, y: 148, z: 2 }, { x: 316, y: 148, z: 2 }, { x: 414, y: 148, z: 2 }, { x: 512, y: 148, z: 2 }, { x: 610, y: 148, z: 2 },
+      const levelConfigs = [
+        {
+          id: 1,
+          title: "第 1 关",
+          subtitle: "热身局",
+          intro: "第一关牌数更少，外露牌更多，适合先热热手。",
+          triples: [
+            "coin-1",
+            "coin-2",
+            "coin-3",
+            "bamboo-1",
+            "bamboo-2",
+            "bamboo-3",
+            "wind-1",
+            "dragon-1",
+          ],
+          slots: [
+            ...makeRow(86, 92, 0, 6),
+            ...makeRow(86, 238, 0, 6),
+            ...makeRow(128, 144, 1, 6),
+            ...makeRow(170, 196, 2, 4),
+            ...makeRow(256, 128, 3, 2),
+          ],
+        },
+        {
+          id: 2,
+          title: "第 2 关",
+          subtitle: "加压局",
+          intro: "第二关会更接近羊了个羊式的叠压感，遮挡和路径都更复杂。",
+          triples: [
+            "coin-1",
+            "coin-2",
+            "coin-3",
+            "coin-4",
+            "bamboo-1",
+            "bamboo-2",
+            "bamboo-3",
+            "bamboo-4",
+            "wind-1",
+            "wind-2",
+            "dragon-1",
+            "dragon-2",
+          ],
+          slots: [
+            ...makeRow(34, 62, 0, 7),
+            ...makeRow(76, 154, 0, 6),
+            ...makeRow(34, 246, 0, 7),
+            ...makeRow(76, 108, 1, 6),
+            ...makeRow(118, 200, 1, 5),
+            ...makeRow(160, 154, 2, 4),
+            ...makeRow(289, 114, 3, 1),
+          ],
+        },
       ];
 
-      let state = {};
+      const levelCount = levelConfigs.length;
+
+      function createDefaultToolUses() {
+        return {
+          removeThree: 1,
+          bomb: 1,
+          shuffle: 1,
+        };
+      }
+
+      function readBestTimeMs() {
+        try {
+          const raw = window.localStorage.getItem(BEST_TIME_STORAGE_KEY);
+          if (!raw) {
+            return null;
+          }
+          const parsed = Number(raw);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writeBestTimeMs(value) {
+        try {
+          window.localStorage.setItem(BEST_TIME_STORAGE_KEY, String(value));
+        } catch {
+          // Ignore storage failures in static-page contexts.
+        }
+      }
+
+      function formatDuration(ms) {
+        if (!Number.isFinite(ms) || ms < 0) {
+          return "--";
+        }
+
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
 
       function shuffle(list) {
         const arr = [...list];
@@ -849,46 +979,78 @@
         return arr;
       }
 
-      function resetState() {
-        const shuffledTiles = shuffle(baseTiles);
-        state = {
-          boardTiles: shuffledTiles.map((tile, index) => ({
-            ...tile,
-            slotIndex: index,
-            removing: false,
-          })),
+      function getCurrentLevel() {
+        return levelConfigs[state.currentLevelIndex];
+      }
+
+      function createLevelTiles(levelConfig) {
+        const deck = levelConfig.triples.flatMap((key, tripleIndex) =>
+          Array.from({ length: 3 }, (_, copyIndex) => ({
+            ...tileMap[key],
+            id: `${levelConfig.id}-${key}-${tripleIndex}-${copyIndex + 1}`,
+          }))
+        );
+
+        return shuffle(deck).map((tile, slotId) => ({
+          ...tile,
+          slotId,
+        }));
+      }
+
+      function createBaseState() {
+        return {
+          boardTiles: [],
           trayTiles: [],
           trayLimit: 7,
           unlockedExtraSlot: false,
-          toolUses: {
-            removeThree: 1,
-            bomb: 1,
-            shuffle: 1,
-          },
+          toolUses: createDefaultToolUses(),
           gameOver: false,
-          win: false,
+          runComplete: false,
           bombMode: false,
           message: "选一张没有被压住的麻将开始摸鱼。",
+          currentLevelIndex: 0,
+          runStartAt: Date.now(),
+          finalElapsedMs: null,
+          bestTimeMs: readBestTimeMs(),
         };
       }
 
-      function getBoardTileById(id) {
-        return state.boardTiles.find((tile) => tile.id === id);
+      let state = createBaseState();
+
+      function updateTimerUi() {
+        timerTextEl.textContent = formatDuration(getElapsedMs());
+        bestTimeEl.textContent = state.bestTimeMs ? formatDuration(state.bestTimeMs) : "--";
       }
 
-      function getActiveBoardTiles() {
-        return state.boardTiles.filter((tile) => !tile.removing);
+      function startTimer() {
+        if (timerIntervalId) {
+          window.clearInterval(timerIntervalId);
+        }
+        updateTimerUi();
+        timerIntervalId = window.setInterval(updateTimerUi, 200);
       }
 
-      function setMessage(text, win = false) {
-        state.message = text;
-        statusTextEl.textContent = text;
-        boardStatusEl.textContent = text;
-        statusTextEl.style.color = win ? "var(--good)" : "var(--ink)";
+      function stopTimer() {
+        if (timerIntervalId) {
+          window.clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+        updateTimerUi();
+      }
+
+      function getElapsedMs() {
+        if (state.finalElapsedMs !== null) {
+          return state.finalElapsedMs;
+        }
+        return Date.now() - state.runStartAt;
+      }
+
+      function getSlot(tile) {
+        return getCurrentLevel().slots[tile.slotId];
       }
 
       function getTileRect(tile) {
-        const slot = slots[tile.slotIndex];
+        const slot = getSlot(tile);
         return {
           left: slot.x,
           top: slot.y - slot.z * 10,
@@ -909,22 +1071,44 @@
 
       function isCovered(tile) {
         const faceRect = getTileFaceRect(tile);
+        const testPoints = [
+          {
+            x: (faceRect.left + faceRect.right) / 2,
+            y: faceRect.top + (faceRect.bottom - faceRect.top) * 0.36,
+          },
+          {
+            x: (faceRect.left + faceRect.right) / 2,
+            y: faceRect.top + (faceRect.bottom - faceRect.top) * 0.56,
+          },
+        ];
+
         return state.boardTiles.some((other) => {
-          if (other.id === tile.id || other.removing) {
+          if (other.id === tile.id) {
             return false;
           }
-          const otherSlot = slots[other.slotIndex];
-          const tileSlot = slots[tile.slotIndex];
+
+          const tileSlot = getSlot(tile);
+          const otherSlot = getSlot(other);
           if (otherSlot.z <= tileSlot.z) {
             return false;
           }
 
-          const otherRect = getTileRect(other);
-          const overlapX = Math.min(faceRect.right, otherRect.right) - Math.max(faceRect.left, otherRect.left);
-          const overlapY = Math.min(faceRect.bottom, otherRect.bottom) - Math.max(faceRect.top, otherRect.top);
-
-          return overlapX > 26 && overlapY > 34;
+          const otherFaceRect = getTileFaceRect(other);
+          return testPoints.some(
+            (point) =>
+              point.x > otherFaceRect.left + 4 &&
+              point.x < otherFaceRect.right - 4 &&
+              point.y > otherFaceRect.top + 4 &&
+              point.y < otherFaceRect.bottom - 4
+          );
         });
+      }
+
+      function setMessage(text, success = false) {
+        state.message = text;
+        statusTextEl.textContent = text;
+        boardStatusEl.textContent = text;
+        statusTextEl.style.color = success ? "var(--good)" : "var(--ink)";
       }
 
       function removeTrayTriples() {
@@ -955,22 +1139,72 @@
         return removedSomething;
       }
 
+      function failRun(reason) {
+        state.gameOver = true;
+        state.runComplete = true;
+        state.finalElapsedMs = getElapsedMs();
+        setMessage(`${reason} 本次总用时 ${formatDuration(state.finalElapsedMs)}。`);
+        stopTimer();
+      }
+
+      function completeRun() {
+        state.gameOver = true;
+        state.runComplete = true;
+        state.finalElapsedMs = getElapsedMs();
+
+        if (!state.bestTimeMs || state.finalElapsedMs < state.bestTimeMs) {
+          state.bestTimeMs = state.finalElapsedMs;
+          writeBestTimeMs(state.bestTimeMs);
+          setMessage(`两关通关成功，用时 ${formatDuration(state.finalElapsedMs)}，刷新了最佳记录。`, true);
+        } else {
+          setMessage(`两关通关成功，用时 ${formatDuration(state.finalElapsedMs)}。`, true);
+        }
+
+        stopTimer();
+      }
+
+      function loadLevel(levelIndex, openingMessage) {
+        state.currentLevelIndex = levelIndex;
+        state.boardTiles = createLevelTiles(getCurrentLevel());
+        state.trayTiles = [];
+        state.trayLimit = state.unlockedExtraSlot ? 8 : 7;
+        state.toolUses = createDefaultToolUses();
+        state.gameOver = false;
+        state.bombMode = false;
+        setMessage(openingMessage ?? getCurrentLevel().intro);
+        render();
+      }
+
+      function advanceLevel() {
+        if (state.currentLevelIndex >= levelCount - 1) {
+          completeRun();
+          render();
+          return;
+        }
+
+        state.gameOver = true;
+        const currentLevel = getCurrentLevel();
+        setMessage(`${currentLevel.title} 已完成，累计用时 ${formatDuration(getElapsedMs())}，准备进入下一关。`, true);
+        render();
+
+        window.setTimeout(() => {
+          loadLevel(state.currentLevelIndex + 1, `${getCurrentLevel().title} 开始了，牌会更密，遮挡也更复杂。`);
+        }, 700);
+      }
+
       function checkEndState() {
         if (state.gameOver) {
           return;
         }
 
         if (state.boardTiles.length === 0) {
-          state.gameOver = true;
-          state.win = true;
-          setMessage("桌面麻将已清空，挑战成功。", true);
+          advanceLevel();
           return;
         }
 
         if (state.trayTiles.length >= state.trayLimit) {
-          state.gameOver = true;
-          state.win = false;
-          setMessage("手牌区满了，这局摸鱼翻车了。");
+          failRun(`手牌区已经满了，止步于 ${getCurrentLevel().title}。`);
+          render();
         }
       }
 
@@ -979,8 +1213,12 @@
           return;
         }
 
-        const tile = getBoardTileById(tileId);
-        if (!tile || isCovered(tile)) {
+        const tile = state.boardTiles.find((item) => item.id === tileId);
+        if (!tile) {
+          return;
+        }
+
+        if (isCovered(tile)) {
           setMessage("这张麻将还被上层压着，先换一张。");
           render();
           return;
@@ -1012,15 +1250,19 @@
         }
 
         const returning = state.trayTiles.splice(0, 3);
-        const usedSlots = new Set(state.boardTiles.map((tile) => tile.slotIndex));
-        const freeSlots = slots
-          .map((_, index) => index)
-          .filter((index) => !usedSlots.has(index))
-          .sort((a, b) => slots[b].z - slots[a].z || slots[a].y - slots[b].y || slots[a].x - slots[b].x);
+        const occupiedSlotIds = new Set(state.boardTiles.map((tile) => tile.slotId));
+        const freeSlotIds = getCurrentLevel()
+          .slots.map((_, slotId) => slotId)
+          .filter((slotId) => !occupiedSlotIds.has(slotId))
+          .sort((leftId, rightId) => {
+            const leftSlot = getCurrentLevel().slots[leftId];
+            const rightSlot = getCurrentLevel().slots[rightId];
+            return rightSlot.z - leftSlot.z || leftSlot.y - rightSlot.y || leftSlot.x - rightSlot.x;
+          });
 
         returning.forEach((tile, index) => {
-          const slotIndex = freeSlots[index] ?? freeSlots[0] ?? index;
-          state.boardTiles.push({ ...tile, slotIndex, removing: false });
+          const slotId = freeSlotIds[index] ?? freeSlotIds[0] ?? index;
+          state.boardTiles.push({ ...tile, slotId });
         });
 
         state.toolUses.removeThree -= 1;
@@ -1039,7 +1281,7 @@
       }
 
       function useBomb(tileId) {
-        const sourceTile = getBoardTileById(tileId);
+        const sourceTile = state.boardTiles.find((tile) => tile.id === tileId);
         if (!sourceTile) {
           return;
         }
@@ -1066,10 +1308,10 @@
           return;
         }
 
-        const shuffledSlots = shuffle(slots.map((_, index) => index)).slice(0, state.boardTiles.length);
+        const occupiedSlotIds = shuffle(state.boardTiles.map((tile) => tile.slotId));
         state.boardTiles = shuffle(state.boardTiles).map((tile, index) => ({
           ...tile,
-          slotIndex: shuffledSlots[index],
+          slotId: occupiedSlotIds[index],
         }));
         state.toolUses.shuffle -= 1;
         setMessage("桌面麻将已经重新打乱。");
@@ -1108,23 +1350,23 @@
         state.unlockedExtraSlot = true;
         state.trayLimit = 8;
         closeUnlockModal();
-        setMessage("第 8 格已解锁，手牌区上限变为 8。");
+        setMessage("第 8 格已解锁，本次挑战后续都将按 8 格计算。");
         render();
       }
 
       function renderBoard() {
         boardEl.innerHTML = "";
 
-        const tiles = [...state.boardTiles].sort((a, b) => {
-          const slotA = slots[a.slotIndex];
-          const slotB = slots[b.slotIndex];
-          return slotA.z - slotB.z || slotA.y - slotB.y || slotA.x - slotB.x;
+        const tiles = [...state.boardTiles].sort((leftTile, rightTile) => {
+          const leftSlot = getSlot(leftTile);
+          const rightSlot = getSlot(rightTile);
+          return leftSlot.z - rightSlot.z || leftSlot.y - rightSlot.y || leftSlot.x - rightSlot.x;
         });
 
         tiles.forEach((tile) => {
-          const slot = slots[tile.slotIndex];
-          const button = document.createElement("button");
+          const slot = getSlot(tile);
           const covered = isCovered(tile);
+          const button = document.createElement("button");
           button.type = "button";
           button.className = "tile";
           if (covered) {
@@ -1137,7 +1379,8 @@
           }
           button.style.left = `${slot.x}px`;
           button.style.top = `${slot.y - slot.z * 10}px`;
-          button.style.zIndex = String(slot.z * 10 + Math.floor(slot.y));
+          button.style.zIndex = String(slot.z * 100 + Math.floor(slot.y));
+          button.ariaLabel = `${tile.name}${covered ? "，当前被上层压住" : "，可点击"}`;
           button.innerHTML = `
             <span class="tile-face">
               <img class="tile-image" src="${tile.image}" alt="${tile.name}" />
@@ -1186,9 +1429,12 @@
       }
 
       function renderSidebar() {
+        const currentLevel = getCurrentLevel();
         boardCountEl.textContent = String(state.boardTiles.length);
         trayCountEl.textContent = `${state.trayTiles.length} / ${state.trayLimit}`;
         trayStatusEl.textContent = `当前上限 ${state.trayLimit} 格`;
+        levelLabelEl.textContent = `${currentLevel.title} / 共 ${levelCount} 关`;
+        levelPillEl.textContent = `${currentLevel.title} · ${currentLevel.subtitle}`;
         removeThreeCountEl.textContent = String(state.toolUses.removeThree);
         bombCountEl.textContent = String(state.toolUses.bomb);
         shuffleCountEl.textContent = String(state.toolUses.shuffle);
@@ -1198,6 +1444,8 @@
         bombButton.disabled = state.toolUses.bomb <= 0 || state.gameOver;
         shuffleButton.disabled = state.toolUses.shuffle <= 0 || state.gameOver;
         unlockButton.disabled = state.unlockedExtraSlot;
+
+        updateTimerUi();
       }
 
       function render() {
@@ -1206,12 +1454,14 @@
         renderSidebar();
       }
 
-      restartButton.addEventListener("click", () => {
-        resetState();
-        setMessage("新的一局开始了，先挑上层的牌。");
-        render();
-      });
+      function startNewRun() {
+        state = createBaseState();
+        state.runStartAt = Date.now();
+        loadLevel(0, "第一关开始，先把最上层和最边缘的牌清出来。");
+        startTimer();
+      }
 
+      restartButton.addEventListener("click", startNewRun);
       removeThreeButton.addEventListener("click", useRemoveThree);
       bombButton.addEventListener("click", activateBomb);
       shuffleButton.addEventListener("click", useShuffle);
@@ -1225,9 +1475,7 @@
       });
 
       setupQrAsset();
-      resetState();
-      setMessage("选一张没有被压住的麻将开始摸鱼。");
-      render();
+      startNewRun();
     </script>
   </body>
 </html>
