@@ -244,18 +244,16 @@
         inset: 0;
         display: grid;
         place-items: center;
-        padding-top: 6px;
+        padding: 8px 6px 10px;
       }
 
-      .tile-glyph {
-        font-size: 1.85rem;
-        line-height: 1;
-      }
-
-      .tile-name {
-        margin-top: 5px;
-        font-size: 0.8rem;
-        color: #6f736f;
+      .tile-image,
+      .tray-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
       }
 
       .tile.covered {
@@ -293,22 +291,6 @@
         opacity: 0;
         transform: scale(0.9);
         pointer-events: none;
-      }
-
-      .theme-bamboo .tile-glyph {
-        color: #338754;
-      }
-
-      .theme-coin .tile-glyph {
-        color: #c85d2f;
-      }
-
-      .theme-wind .tile-glyph {
-        color: #426aa4;
-      }
-
-      .theme-dragon .tile-glyph {
-        color: #9f3856;
       }
 
       .tray-area {
@@ -371,18 +353,7 @@
         border: 1px solid rgba(61, 49, 31, 0.14);
         background: linear-gradient(180deg, #fefcf7 0%, #f0e6d6 100%);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        display: grid;
-        place-items: center;
-      }
-
-      .tray-glyph {
-        font-size: 1.45rem;
-      }
-
-      .tray-name {
-        margin-top: 4px;
-        font-size: 0.74rem;
-        color: #6f736f;
+        padding: 6px 4px 8px;
       }
 
       .sidebar {
@@ -829,18 +800,18 @@
       const qrFallback = document.getElementById("qr-fallback");
 
       const tileDefs = [
-        { key: "bamboo-1", glyph: "竹", name: "青竹", theme: "bamboo" },
-        { key: "bamboo-2", glyph: "兰", name: "幽兰", theme: "bamboo" },
-        { key: "bamboo-3", glyph: "菊", name: "秋菊", theme: "bamboo" },
-        { key: "bamboo-4", glyph: "梅", name: "寒梅", theme: "bamboo" },
-        { key: "coin-1", glyph: "一", name: "一筒", theme: "coin" },
-        { key: "coin-2", glyph: "二", name: "二筒", theme: "coin" },
-        { key: "coin-3", glyph: "三", name: "三筒", theme: "coin" },
-        { key: "coin-4", glyph: "四", name: "四筒", theme: "coin" },
-        { key: "wind-1", glyph: "东", name: "东风", theme: "wind" },
-        { key: "wind-2", glyph: "南", name: "南风", theme: "wind" },
-        { key: "dragon-1", glyph: "中", name: "红中", theme: "dragon" },
-        { key: "dragon-2", glyph: "发", name: "发财", theme: "dragon" },
+        { key: "bamboo-1", name: "一索", image: "./assets/mahjong-tiles/Sou1.png" },
+        { key: "bamboo-2", name: "三索", image: "./assets/mahjong-tiles/Sou3.png" },
+        { key: "bamboo-3", name: "五索", image: "./assets/mahjong-tiles/Sou5.png" },
+        { key: "bamboo-4", name: "七索", image: "./assets/mahjong-tiles/Sou7.png" },
+        { key: "coin-1", name: "一筒", image: "./assets/mahjong-tiles/Pin1.png" },
+        { key: "coin-2", name: "三筒", image: "./assets/mahjong-tiles/Pin3.png" },
+        { key: "coin-3", name: "五筒", image: "./assets/mahjong-tiles/Pin5.png" },
+        { key: "coin-4", name: "七筒", image: "./assets/mahjong-tiles/Pin7.png" },
+        { key: "wind-1", name: "东风", image: "./assets/mahjong-tiles/Ton.png" },
+        { key: "wind-2", name: "南风", image: "./assets/mahjong-tiles/Nan.png" },
+        { key: "dragon-1", name: "红中", image: "./assets/mahjong-tiles/Chun.png" },
+        { key: "dragon-2", name: "发财", image: "./assets/mahjong-tiles/Hatsu.png" },
       ];
 
       const baseTiles = tileDefs.flatMap((tile, index) => [
@@ -1150,7 +1121,7 @@
           const button = document.createElement("button");
           const covered = isCovered(tile);
           button.type = "button";
-          button.className = `tile theme-${tile.theme}`;
+          button.className = "tile";
           if (covered) {
             button.classList.add("covered");
           } else {
@@ -1164,8 +1135,7 @@
           button.style.zIndex = String(slot.z * 10 + Math.floor(slot.y));
           button.innerHTML = `
             <span class="tile-face">
-              <span class="tile-glyph">${tile.glyph}</span>
-              <span class="tile-name">${tile.name}</span>
+              <img class="tile-image" src="${tile.image}" alt="${tile.name}" />
             </span>
           `;
           button.addEventListener("click", () => {
@@ -1200,11 +1170,8 @@
           if (tile) {
             slot.classList.add("filled");
             slot.innerHTML = `
-              <div class="tray-tile theme-${tile.theme}">
-                <div>
-                  <div class="tray-glyph">${tile.glyph}</div>
-                  <div class="tray-name">${tile.name}</div>
-                </div>
+              <div class="tray-tile">
+                <img class="tray-image" src="${tile.image}" alt="${tile.name}" />
               </div>
             `;
           }
