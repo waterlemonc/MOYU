@@ -202,6 +202,8 @@
         position: relative;
         height: 560px;
         margin: 8px 12px 0;
+        transform: scale(0.9);
+        transform-origin: top left;
       }
 
       .tile {
@@ -216,6 +218,7 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.92),
           0 8px 16px rgba(64, 50, 31, 0.18);
         transition: transform 140ms ease, box-shadow 140ms ease, opacity 160ms ease, filter 160ms ease;
+        overflow: hidden;
       }
 
       .tile::before {
@@ -235,7 +238,7 @@
         position: absolute;
         inset: 6px;
         border-radius: 12px;
-        border: 1px solid rgba(180, 161, 132, 0.28);
+        border: 1px solid rgba(180, 161, 132, 0.12);
         pointer-events: none;
       }
 
@@ -244,7 +247,8 @@
         inset: 0;
         display: grid;
         place-items: center;
-        padding: 8px 6px 10px;
+        padding: 0;
+        background: #fffdfa;
       }
 
       .tile-image,
@@ -252,7 +256,7 @@
         display: block;
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         pointer-events: none;
       }
 
@@ -353,7 +357,8 @@
         border: 1px solid rgba(61, 49, 31, 0.14);
         background: linear-gradient(180deg, #fefcf7 0%, #f0e6d6 100%);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        padding: 6px 4px 8px;
+        padding: 0;
+        overflow: hidden;
       }
 
       .sidebar {
@@ -824,13 +829,13 @@
       const TILE_FACE_INSET = 12;
 
       const slots = [
-        { x: 40, y: 48, z: 0 }, { x: 118, y: 48, z: 0 }, { x: 196, y: 48, z: 0 }, { x: 274, y: 48, z: 0 }, { x: 352, y: 48, z: 0 }, { x: 430, y: 48, z: 0 }, { x: 508, y: 48, z: 0 }, { x: 586, y: 48, z: 0 },
-        { x: 79, y: 118, z: 0 }, { x: 157, y: 118, z: 0 }, { x: 235, y: 118, z: 0 }, { x: 313, y: 118, z: 0 }, { x: 391, y: 118, z: 0 }, { x: 469, y: 118, z: 0 }, { x: 547, y: 118, z: 0 },
-        { x: 40, y: 198, z: 0 }, { x: 118, y: 198, z: 0 }, { x: 196, y: 198, z: 0 }, { x: 274, y: 198, z: 0 }, { x: 352, y: 198, z: 0 }, { x: 430, y: 198, z: 0 }, { x: 508, y: 198, z: 0 }, { x: 586, y: 198, z: 0 },
-        { x: 79, y: 278, z: 0 }, { x: 157, y: 278, z: 0 }, { x: 235, y: 278, z: 0 }, { x: 313, y: 278, z: 0 }, { x: 391, y: 278, z: 0 }, { x: 469, y: 278, z: 0 }, { x: 547, y: 278, z: 0 },
-        { x: 120, y: 92, z: 1 }, { x: 198, y: 92, z: 1 }, { x: 276, y: 92, z: 1 }, { x: 354, y: 92, z: 1 }, { x: 432, y: 92, z: 1 }, { x: 510, y: 92, z: 1 },
-        { x: 120, y: 172, z: 1 }, { x: 198, y: 172, z: 1 }, { x: 276, y: 172, z: 1 }, { x: 354, y: 172, z: 1 }, { x: 432, y: 172, z: 1 }, { x: 510, y: 172, z: 1 },
-        { x: 159, y: 140, z: 2 }, { x: 237, y: 140, z: 2 }, { x: 315, y: 140, z: 2 }, { x: 393, y: 140, z: 2 }, { x: 471, y: 140, z: 2 },
+        { x: 24, y: 34, z: 0 }, { x: 122, y: 34, z: 0 }, { x: 220, y: 34, z: 0 }, { x: 318, y: 34, z: 0 }, { x: 416, y: 34, z: 0 }, { x: 514, y: 34, z: 0 }, { x: 612, y: 34, z: 0 }, { x: 710, y: 34, z: 0 },
+        { x: 72, y: 124, z: 0 }, { x: 170, y: 124, z: 0 }, { x: 268, y: 124, z: 0 }, { x: 366, y: 124, z: 0 }, { x: 464, y: 124, z: 0 }, { x: 562, y: 124, z: 0 }, { x: 660, y: 124, z: 0 },
+        { x: 24, y: 224, z: 0 }, { x: 122, y: 224, z: 0 }, { x: 220, y: 224, z: 0 }, { x: 318, y: 224, z: 0 }, { x: 416, y: 224, z: 0 }, { x: 514, y: 224, z: 0 }, { x: 612, y: 224, z: 0 }, { x: 710, y: 224, z: 0 },
+        { x: 72, y: 324, z: 0 }, { x: 170, y: 324, z: 0 }, { x: 268, y: 324, z: 0 }, { x: 366, y: 324, z: 0 }, { x: 464, y: 324, z: 0 }, { x: 562, y: 324, z: 0 }, { x: 660, y: 324, z: 0 },
+        { x: 146, y: 88, z: 1 }, { x: 244, y: 88, z: 1 }, { x: 342, y: 88, z: 1 }, { x: 440, y: 88, z: 1 }, { x: 538, y: 88, z: 1 }, { x: 636, y: 88, z: 1 },
+        { x: 146, y: 188, z: 1 }, { x: 244, y: 188, z: 1 }, { x: 342, y: 188, z: 1 }, { x: 440, y: 188, z: 1 }, { x: 538, y: 188, z: 1 }, { x: 636, y: 188, z: 1 },
+        { x: 218, y: 148, z: 2 }, { x: 316, y: 148, z: 2 }, { x: 414, y: 148, z: 2 }, { x: 512, y: 148, z: 2 }, { x: 610, y: 148, z: 2 },
       ];
 
       let state = {};
