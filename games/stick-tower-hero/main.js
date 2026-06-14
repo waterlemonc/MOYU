@@ -58,6 +58,8 @@
     canvasWidth: canvas.clientWidth || 432,
     canvasHeight: canvas.clientHeight || 768,
     clearedRooms: 0,
+    visitedRoomIds: new Set(),
+    visitedMask: 0,
     hoverRoomId: null,
     invalidRoomId: null,
     invalidUntil: 0,
@@ -161,15 +163,17 @@
     const roomMap = new Map();
     const adjacency = new Map();
     const mutableBits = new Map();
+    const roomBits = new Map();
     let bitIndex = 0;
 
     for (const room of level.rooms) {
       roomMap.set(room.id, room);
       adjacency.set(room.id, []);
+      roomBits.set(room.id, bitIndex);
+      bitIndex += 1;
 
       if (room.baseType !== "start" && room.baseType !== "empty") {
-        mutableBits.set(room.id, bitIndex);
-        bitIndex += 1;
+        mutableBits.set(room.id, roomBits.get(room.id));
       }
     }
 
@@ -182,7 +186,8 @@
       level,
       roomMap,
       adjacency,
-      mutableBits
+      mutableBits,
+      roomBits
     };
   }
 
@@ -325,6 +330,8 @@
     state.player.power = state.level.playerPower;
     state.player.keys = 0;
     state.clearedRooms = 0;
+    state.visitedRoomIds = new Set([state.player.roomId]);
+    state.visitedMask = getRoomMaskBit(state.player.roomId);
     state.hoverRoomId = null;
     state.invalidRoomId = null;
     state.invalidUntil = 0;
@@ -348,12 +355,26 @@
     return state.layout.centers.get(roomId);
   }
 
+  function getRoomMaskBit(roomId) {
+    const bit = state.levelMeta.roomBits.get(roomId);
+    return bit === undefined ? 0 : 1 << bit;
+  }
+
+  function hasVisitedRoom(roomId) {
+    return state.visitedRoomIds.has(roomId);
+  }
+
+  function markRoomVisited(roomId) {
+    state.visitedRoomIds.add(roomId);
+    state.visitedMask |= getRoomMaskBit(roomId);
+  }
+
   function getReachableRoomIds() {
     if (state.moveAnimation || state.isLevelWon || state.isLevelLost) {
       return new Set();
     }
 
-    return new Set(state.adjacency.get(state.player.roomId) || []);
+    return new Set((state.adjacency.get(state.player.roomId) || []).filter((roomId) => !hasVisitedRoom(roomId)));
   }
 
   function getRoomAtPosition(x, y) {
@@ -446,6 +467,11 @@
       return;
     }
 
+    if (hasVisitedRoom(room.id)) {
+      markInvalid(room.id, "走过的格子不能回头，必须继续往前推。");
+      return;
+    }
+
     if (!isConnected(state.player.roomId, room.id)) {
       markInvalid(room.id, "道路不通。只能去相邻且连通的房间。");
       return;
@@ -498,6 +524,7 @@
     }
 
     state.player.roomId = state.moveAnimation.toId;
+    markRoomVisited(state.player.roomId);
     state.moveAnimation = null;
     triggerRoomEvent(state.roomMap.get(state.player.roomId));
     updateHUD();
@@ -759,17 +786,27 @@
   function simulateSolverMove(node, targetRoomId, meta) {
     const room = meta.roomMap.get(targetRoomId);
     const type = getRoomTypeInSolver(targetRoomId, node.mask, meta);
+    const roomMaskBit = meta.roomBits.get(targetRoomId);
     const next = {
       roomId: targetRoomId,
       power: node.power,
       keys: node.keys,
       mask: node.mask,
+      visitedMask: node.visitedMask,
       won: false
     };
     const bit = meta.mutableBits.get(targetRoomId);
 
     if (!room) {
       return null;
+    }
+
+    if (roomMaskBit !== undefined && (next.visitedMask & (1 << roomMaskBit)) !== 0) {
+      return null;
+    }
+
+    if (roomMaskBit !== undefined) {
+      next.visitedMask |= 1 << roomMaskBit;
     }
 
     switch (type) {
@@ -827,7 +864,7 @@
   }
 
   function makeSolverSignature(node) {
-    return `${node.roomId}|${node.power}|${node.keys}|${node.mask}`;
+    return `${node.roomId}|${node.power}|${node.keys}|${node.mask}|${node.visitedMask}`;
   }
 
   function findWinningPath(meta, startNode) {
@@ -875,7 +912,8 @@
       roomId: state.player.roomId,
       power: state.player.power,
       keys: state.player.keys,
-      mask: getCurrentSolverMask()
+      mask: getCurrentSolverMask(),
+      visitedMask: state.visitedMask
     });
 
     if (!path || path.length < 2) {
@@ -1112,6 +1150,7 @@
     const rect = state.layout.roomRects.get(room.id);
     const center = state.layout.centers.get(room.id);
     const isCurrent = !state.moveAnimation && state.player.roomId === room.id;
+    const isVisited = !isCurrent && hasVisitedRoom(room.id);
     const isReachable = reachableIds.has(room.id);
     const isHovered = state.hoverRoomId === room.id;
     const isInvalid = state.invalidRoomId === room.id && state.invalidUntil > now;
@@ -1119,7 +1158,7 @@
     const effect = getEffectForRoom(room.id, now);
     const pulse = effect ? Math.sin(((now - effect.startedAt) / effect.duration) * Math.PI) : 0;
     const scale = 1 + pulse * 0.03;
-    const accent = getRoomAccent(room);
+    const accent = getRoomAccent(room, isVisited);
 
     ctx.save();
     ctx.translate(center.x, center.y);
@@ -1138,10 +1177,10 @@
     }
 
     roundedRectPath(ctx, -rect.width / 2, -rect.height / 2, rect.width, rect.height, 18);
-    ctx.fillStyle = "#fffefb";
+    ctx.fillStyle = isVisited ? "#f1f3f7" : "#fffefb";
     ctx.fill();
     ctx.lineWidth = isHovered ? 4 : 3;
-    ctx.strokeStyle = isInvalid ? "#cb4547" : isHinted ? "#d6931d" : isCurrent ? "#2f67ff" : "#18253d";
+    ctx.strokeStyle = isInvalid ? "#cb4547" : isHinted ? "#d6931d" : isCurrent ? "#2f67ff" : isVisited ? "#9ca7b7" : "#18253d";
     ctx.stroke();
 
     roundedRectPath(ctx, -rect.width / 2, -rect.height / 2, rect.width, 18, 18);
@@ -1185,7 +1224,7 @@
           ctx.font = "12px 'Trebuchet MS', 'PingFang SC', sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText("已清空", center.x, center.y + 8);
+          ctx.fillText(isVisited ? "已走过" : "已清空", center.x, center.y + 8);
           ctx.restore();
         }
         break;
@@ -1219,11 +1258,15 @@
       case "start":
         return "起点";
       default:
-        return room.baseType !== "empty" && room.baseType !== "start" ? "已清空" : "空房";
+        return room.baseType !== "empty" && room.baseType !== "start" ? "已走过" : "空房";
     }
   }
 
-  function getRoomAccent(room) {
+  function getRoomAccent(room, isVisited) {
+    if (isVisited) {
+      return "#dde2ea";
+    }
+
     switch (room.type) {
       case "enemy":
         return "#ffe3e0";
@@ -1283,7 +1326,7 @@
 
     ctx.font = "13px 'Trebuchet MS', 'PingFang SC', sans-serif";
     ctx.fillStyle = "#607289";
-    ctx.fillText("蓝色是你，红色是敌人，严格大于才能吞掉。", 24, 50);
+    ctx.fillText("蓝色是你，红色是敌人，走过的格子不能回头。", 24, 50);
     ctx.restore();
   }
 
@@ -1369,7 +1412,8 @@
         roomId: level.playerStart,
         power: level.playerPower,
         keys: 0,
-        mask: 0
+        mask: 0,
+        visitedMask: 1 << meta.roomBits.get(level.playerStart)
       });
 
       if (!path) {
