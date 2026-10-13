@@ -3,130 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="发现小游戏、解压互动和轻量静态作品。搜一搜，选一个，马上开始摸鱼。" />
     <title>MOYU 摸鱼指挥部</title>
     <link rel="stylesheet" href="assets/css/home.css" />
+    <link rel="stylesheet" href="assets/css/catalog.css" />
   </head>
   <body>
-    <div class="page-noise" aria-hidden="true"></div>
-
+    <a class="skip-link" href="#resources">跳到资源列表</a>
+    <header class="site-header shell">
+      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">M</span> MOYU <span class="brand-note">摸鱼指挥部</span></a>
+      <nav class="site-nav" aria-label="主导航">
+        <a href="./" aria-current="page">发现</a>
+        <a href="./games/">小游戏</a>
+        <a href="./pages/">静态页</a>
+      </nav>
+    </header>
     <main class="shell">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">MOYU CONTROL ROOM</p>
-          <h1>摸鱼指挥部</h1>
-          <p class="intro">
-            一个专门收纳静态页面、小游戏和轻量整活作品的小基地。工作不一定做完，但页面可以先做得很快乐。
-          </p>
-
-          <div class="hero-actions">
-            <a class="action primary" href="./games/">打开小游戏仓</a>
-            <a class="action secondary" href="./pages/">浏览静态页</a>
-          </div>
+      <section class="welcome" aria-labelledby="welcome-title">
+        <div>
+          <p class="eyebrow">给忙碌按个暂停</p>
+          <h1 id="welcome-title">摸一会儿鱼，<span>快乐一下。</span></h1>
+          <p class="intro">小游戏、解压互动和有趣的页面。挑一个喜欢的，马上开始。</p>
         </div>
-
-        <aside class="hero-board" aria-label="摸鱼情报">
-          <div class="board-chip">
-            <span class="board-label">今日状态</span>
-            <strong id="moyu-status">工位在线，灵魂稍后到达</strong>
-          </div>
-          <div class="board-metrics">
-            <div class="metric">
-              <span>摸鱼指数</span>
-              <strong id="moyu-score">87%</strong>
-            </div>
-            <div class="metric">
-              <span>灵感信号</span>
-              <strong>满格</strong>
-            </div>
-            <div class="metric">
-              <span>适宜操作</span>
-              <strong>小窗摸鱼</strong>
-            </div>
-          </div>
-
-          <a class="board-qr" href="./assets/images/moyu-xiaoyuzhou-qr.jpg" target="_blank" rel="noreferrer">
-            <div class="board-qr-copy">
-              <span class="board-label">公众号推荐</span>
-              <strong>摸鱼小宇宙</strong>
-              <p>扫一扫直接关注，把摸鱼情报、小游戏更新和新页面收进手机里。</p>
-            </div>
-            <img src="./assets/images/moyu-xiaoyuzhou-qr.jpg" alt="摸鱼小宇宙公众号二维码" />
-          </a>
-        </aside>
+        <a class="resume-link" data-resource-resume hidden><span>上次玩过</span><strong></strong><span aria-hidden="true">继续打开 ↗</span></a>
       </section>
 
-      <section class="dashboard">
-        <article class="feature feature-wide">
-          <div class="feature-head">
-            <div>
-              <p class="kicker">导航中心</p>
-              <h2>摸鱼入口</h2>
-            </div>
-            <span class="badge">持续扩建中</span>
+      <section class="resource-section" id="resources" aria-labelledby="resource-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">发现一点乐趣</p><h2 id="resource-heading">摸鱼资源</h2></div>
+          <button class="action secondary random-button" type="button" data-resource-random="all"><span aria-hidden="true">↗</span> 随便玩一个</button>
+        </div>
+        <div class="catalog-toolbar">
+          <div class="catalog-filters" data-resource-filters="all" aria-label="资源分类"></div>
+          <div class="search-box">
+            <label class="sr-only" for="resource-search">搜索摸鱼资源</label>
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="resource-search" type="search" data-resource-search="all" placeholder="搜索名称、玩法或标签" />
+            <button type="button" class="clear-search" data-resource-clear="all" aria-label="清空搜索" hidden>×</button>
           </div>
+        </div>
+        <div class="results-heading"><span data-resource-count="all" role="status" aria-live="polite"></span><span>点击卡片，直接开始</span></div>
+        <div class="portal-grid" data-resource-list="all"></div>
+        <noscript><p>请启用 JavaScript 查看资源列表，或浏览 <a href="./games/">小游戏仓</a>。</p></noscript>
+      </section>
 
-          <div class="portal-grid" data-resource-list="featured"></div>
-          <noscript><p>请启用 JavaScript 查看资源导航，或直接浏览 <a href="./games/">小游戏仓</a>。</p></noscript>
+      <section class="extras" aria-label="摸鱼小角落">
+        <article class="extra-panel daily-panel">
+          <p class="eyebrow">今日小提醒</p>
+          <div class="daily-heading"><h2>慢一点，也没关系</h2><time id="today-label"></time></div>
+          <p id="today-tip" class="muted">先喝口水，再继续。</p>
+          <details class="calendar-details">
+            <summary>查看本月日历 <span id="calendar-month-label"></span></summary>
+            <div class="calendar-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+            <div class="calendar-grid" id="calendar-grid" aria-label="本月日历"></div>
+          </details>
         </article>
-
-        <article class="feature feature-calendar">
-          <div class="feature-head">
-            <div>
-              <p class="kicker">摸鱼组件</p>
-              <h2>摸鱼日历</h2>
-            </div>
-            <span class="badge badge-soft" id="calendar-month-label">本月排班</span>
-          </div>
-
-          <div class="calendar-summary">
-            <div>
-              <span>今日</span>
-              <strong id="today-label">--</strong>
-            </div>
-            <div>
-              <span>建议动作</span>
-              <strong id="today-tip">先喝水再开会</strong>
-            </div>
-          </div>
-
-          <div class="calendar-weekdays" aria-hidden="true">
-            <span>一</span>
-            <span>二</span>
-            <span>三</span>
-            <span>四</span>
-            <span>五</span>
-            <span>六</span>
-            <span>日</span>
-          </div>
-
-          <div class="calendar-grid" id="calendar-grid"></div>
-        </article>
-
-        <article class="feature feature-jokes">
-          <div class="feature-head">
-            <div>
-              <p class="kicker">精神口粮</p>
-              <h2>摸鱼段子</h2>
-            </div>
-            <button class="ghost-button" id="refresh-joke" type="button">换一条</button>
-          </div>
-
-          <blockquote class="joke-card" id="joke-card">
-            <p id="joke-text">
-              今天不是不努力，只是在等待一个足够能说服自己的咖啡温度。
-            </p>
-            <footer id="joke-source">摸鱼办每日播报</footer>
-          </blockquote>
-
-          <ul class="joke-list" aria-label="摸鱼金句">
-            <li>会开得越久，越适合悄悄规划晚饭。</li>
-            <li>鼠标移动得很认真，不代表事情推进得很快。</li>
-            <li>灵感偶尔会迟到，但它通常会带着奶茶一起出现。</li>
-          </ul>
+        <article class="extra-panel joke-panel">
+          <div class="extra-heading"><p class="eyebrow">工位快乐补给</p><button class="text-button" id="refresh-joke" type="button">换一条 ↻</button></div>
+          <blockquote class="joke-card"><p id="joke-text"></p><footer id="joke-source"></footer></blockquote>
         </article>
       </section>
     </main>
-
+    <footer class="site-footer shell">
+      <p>MOYU · 给日常留一点快乐</p>
+      <details class="follow-details"><summary>关注摸鱼小宇宙 ↗</summary><div class="follow-content"><img src="./assets/images/moyu-xiaoyuzhou-qr.jpg" alt="摸鱼小宇宙公众号二维码" width="144" height="144" loading="lazy" /><p>扫一扫，收下新的小游戏与摸鱼灵感。</p><a href="./assets/images/moyu-xiaoyuzhou-qr.jpg" target="_blank" rel="noreferrer">打开二维码大图 ↗</a></div></details>
+    </footer>
     <script src="assets/js/resources.js"></script>
     <script src="assets/js/catalog.js"></script>
     <script src="assets/js/home.js"></script>

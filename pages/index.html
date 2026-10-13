@@ -3,29 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>页面陈列室 | MOYU</title>
+    <title>静态页 | MOYU</title>
     <link rel="stylesheet" href="../assets/css/home.css" />
     <link rel="stylesheet" href="../assets/css/catalog.css" />
   </head>
   <body>
-    <main class="shell catalog-shell">
+    <a class="skip-link" href="#resources">跳到资源列表</a>
+    <header class="site-header shell">
+      <a class="brand" href="../"><span class="brand-mark" aria-hidden="true">M</span> MOYU <span class="brand-note">摸鱼指挥部</span></a>
+      <nav class="site-nav" aria-label="主导航">
+        <a href="../">发现</a>
+        <a href="../games/">小游戏</a>
+        <a href="../pages/" aria-current="page">静态页</a>
+      </nav>
+    </header>
+    <main class="shell">
       <header class="catalog-heading">
-        <p class="eyebrow">MOYU PAGES</p>
-        <h1>页面陈列室</h1>
-        <p class="intro">收纳专题页、整活作品和轻量互动页面。</p>
+        <p class="eyebrow">MOYU COLLECTION</p>
+        <h1>静态页</h1>
+        <p class="intro">专题页、轻量工具和有趣的小作品，都收在这里。</p>
       </header>
-      <section class="feature" aria-label="资源列表">
+      <section class="resource-section" id="resources" aria-label="资源列表">
         <div class="catalog-toolbar">
-          <label class="catalog-search">搜索
-            <input type="search" data-resource-search="pages" placeholder="名称、玩法或标签" />
-          </label>
-          <span class="catalog-count" data-resource-count="pages" role="status"></span>
+          <div class="search-box">
+            <label class="sr-only" for="resource-search">搜索静态页</label>
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="resource-search" type="search" data-resource-search="pages" placeholder="搜索名称、玩法或标签" />
+            <button class="clear-search" type="button" data-resource-clear="pages" aria-label="清空搜索" hidden>×</button>
+          </div>
+          <button class="action secondary random-button" type="button" data-resource-random="pages">随机打开 ↗</button>
         </div>
+        <div class="results-heading"><span data-resource-count="pages" role="status" aria-live="polite"></span><span>点击卡片，直接开始</span></div>
         <div class="portal-grid" data-resource-list="pages"></div>
         <noscript><p>请启用 JavaScript 查看资源列表。</p></noscript>
-        <a class="catalog-back" href="../index.html">返回摸鱼指挥部</a>
       </section>
+      <a class="catalog-back" href="../">← 返回全部资源</a>
     </main>
+    <footer class="site-footer shell"><p>MOYU · 给日常留一点快乐</p></footer>
     <script src="../assets/js/resources.js"></script>
     <script src="../assets/js/catalog.js"></script>
   </body>

@@ -11,7 +11,7 @@ index.html                   首页
 assets/
   js/resources.js            全站资源与分类配置（唯一导航数据源）
   js/catalog.js              共享导航渲染、分类筛选和搜索
-  js/home.js                 首页日历、状态和段子
+  js/home.js                 首页日期、折叠日历和段子
   css/home.css               首页与导航页的公共视觉样式
   css/catalog.css            分类目录样式
   images/                    全站共享图片
@@ -24,7 +24,7 @@ scripts/check-site.mjs       配置、路径和语法检查
 .github/workflows/pages.yml  检查与自动部署
 ```
 
-首页展示全部分类及 `featured: true` 的作品；分类页展示对应 `category` 的全部作品，支持按名称、简介和标签搜索。列表顺序遵循配置中的顺序。所有页面共用同一份作品标题和介绍。
+首页直接展示全部作品，提供分类切换、关键词搜索和随机打开；分类页展示对应 `category` 的作品。搜索与首页分类记录在 URL 中，便于刷新或返回后继续浏览。最近打开的作品 ID 保存在独立的本地存储键中，首页提供继续打开入口；禁用存储时仍可正常浏览。列表顺序遵循配置顺序，标题和简介共用同一份数据。
 
 ## 新增作品
 
@@ -40,8 +40,9 @@ scripts/check-site.mjs       配置、路径和语法检查
   description: "静静看时间流动，给大脑留一点空白。",
   path: "pages/relax-clock/",     // 从网站根目录算起，不以 / 开头
   tags: ["解压", "工具"],
-  featured: true,                 // 是否展示在首页
+  featured: true,                 // 预留给推荐列表；首页展示全部资源
   tone: "sky",                   // sky / mint / sunset
+  symbol: "◷",                   // 可选，卡片装饰符号
 }
 ```
 

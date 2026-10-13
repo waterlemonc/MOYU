@@ -193,3 +193,9 @@ p {
     font-size: 0.95rem;
   }
 }
+
+.panel-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.panel-nav .eyebrow { margin: 0; }
+.back-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; color: var(--text); font-size: 13px; text-decoration: none; background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
+.back-link:hover { background: rgba(255, 255, 255, 0.16); }
+.back-link:focus-visible { outline: 2px solid #ffd58d; outline-offset: 3px; }

@@ -21,14 +21,6 @@ const jokes = [
   },
 ];
 
-const statusList = [
-  "工位在线，灵魂稍后到达",
-  "会议很多，心态更松",
-  "今日适合低调浏览创意页面",
-  "任务存在，但快乐优先",
-  "表面推进需求，实际滋养灵感",
-];
-
 const dayTips = [
   "适合把难题留给下午的自己",
   "先打开文档，再打开零食",
@@ -42,8 +34,6 @@ const dayTips = [
 const jokeText = document.getElementById("joke-text");
 const jokeSource = document.getElementById("joke-source");
 const refreshJokeButton = document.getElementById("refresh-joke");
-const moyuStatus = document.getElementById("moyu-status");
-const moyuScore = document.getElementById("moyu-score");
 const todayLabel = document.getElementById("today-label");
 const todayTip = document.getElementById("today-tip");
 const calendarGrid = document.getElementById("calendar-grid");
@@ -66,8 +56,9 @@ function renderCalendar() {
   const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
 
   calendarGrid.innerHTML = "";
-  calendarMonthLabel.textContent = `${year}.${pad2(month + 1)} 摸鱼排班`;
+  calendarMonthLabel.textContent = `${year} 年 ${month + 1} 月`;
   todayLabel.textContent = `${year}-${pad2(month + 1)}-${pad2(today)}`;
+  todayLabel.dateTime = `${year}-${pad2(month + 1)}-${pad2(today)}`;
   todayTip.textContent = dayTips[mondayBased];
 
   for (let index = 0; index < totalCells; index += 1) {
@@ -77,13 +68,13 @@ function renderCalendar() {
 
     if (day < 1 || day > daysInMonth) {
       cell.classList.add("is-off");
-      cell.innerHTML = "<strong> </strong><span>留白</span>";
+      cell.setAttribute("aria-hidden", "true");
     } else {
-      const mood = index % 3 === 0 ? "巡航" : index % 3 === 1 ? "潜行" : "发呆";
-      cell.innerHTML = `<strong>${day}</strong><span>${mood}</span>`;
+      cell.textContent = day;
 
       if (day === today) {
         cell.classList.add("is-today");
+        cell.setAttribute("aria-current", "date");
       }
     }
 
@@ -107,15 +98,5 @@ function setupJokes() {
   });
 }
 
-function setupStatus() {
-  const now = new Date();
-  const statusIndex = now.getDay() % statusList.length;
-  const score = 70 + ((now.getDate() * 3) % 27);
-
-  moyuStatus.textContent = statusList[statusIndex];
-  moyuScore.textContent = `${score}%`;
-}
-
 renderCalendar();
 setupJokes();
-setupStatus();
