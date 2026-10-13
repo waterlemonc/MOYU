@@ -92,20 +92,3 @@ a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visibl
 .welcome .resume-link { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; padding: 8px 12px; max-width: 100%; }
 .welcome .resume-link strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .welcome .resume-link span { flex-shrink: 0; font-size: 11px; }
-.follow-card { display: flex; align-items: center; gap: 16px; flex: 0 0 342px; padding: 18px; border: 1px solid #dbe6d8; border-radius: 18px; background: linear-gradient(135deg, #edf3e8, #f8faf4); box-shadow: 0 6px 20px #25342e05; }
-.follow-copy { flex: 1; min-width: 0; }
-.follow-badge { display: inline-block; color: var(--accent); font-size: 10px; letter-spacing: .04em; margin-bottom: 8px; }
-.follow-copy h2 { font-size: 19px; margin-bottom: 6px; }
-.follow-copy p { color: var(--muted); font-size: 12px; line-height: 1.8; }
-.follow-hint { display: block; color: var(--accent); font-size: 10px; margin-top: 10px; }
-.follow-qr { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border: 1px solid #e4e9df; border-radius: 12px; background: white; text-decoration: none; transition: border-color 160ms; }
-.follow-qr img { display: block; width: 112px; height: 112px; object-fit: contain; }
-.follow-qr span { font-size: 10px; color: var(--muted); }
-.follow-qr:hover { border-color: var(--accent); }
-@media (max-width: 960px) and (min-width: 761px) { .welcome h1 { font-size: 30px; } .follow-card { flex-basis: 310px; gap: 10px; padding: 14px; } }
-@media (max-width: 760px) {
-  .follow-card { flex-basis: auto; justify-content: space-between; padding: 14px 16px; gap: 12px; }
-  .follow-qr img { width: 96px; height: 96px; }
-  .follow-copy h2 { font-size: 18px; }
-  .follow-hint { margin-top: 6px; }
-}
