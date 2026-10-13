@@ -1,17 +1,9 @@
-# Assets
+# 游戏资源
 
-## QR Asset
+`mahjong-tiles/` 中的麻将牌 PNG 来自：
 
-Place the real QR code image at:
+https://github.com/fluffystuff/riichi-mahjong-tiles
 
-`games/assets/moyu-xiaoyuzhou-qr.jpg`
+许可：CC0 / Public Domain。
 
-The Mahjong game modal will load that image automatically. If the file is missing, it falls back to the built-in placeholder QR illustration.
-
-## Mahjong Tile Images
-
-Mahjong tile PNGs in `games/assets/mahjong-tiles/` are copied from:
-
-`https://github.com/fluffystuff/riichi-mahjong-tiles`
-
-License: CC0 / Public Domain
+全站共用的公众号二维码位于 `assets/images/moyu-xiaoyuzhou-qr.jpg`。

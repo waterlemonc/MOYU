@@ -3,13 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>静态页面列表</title>
+    <title>页面陈列室 | MOYU</title>
+    <link rel="stylesheet" href="../assets/css/home.css" />
+    <link rel="stylesheet" href="../assets/css/catalog.css" />
   </head>
   <body>
-    <main>
-      <h1>静态页面列表</h1>
-      <p>把你的页面文件放到这个目录里，再把链接补到这里即可。</p>
-      <p><a href="../index.html">返回首页</a></p>
+    <main class="shell catalog-shell">
+      <header class="catalog-heading">
+        <p class="eyebrow">MOYU PAGES</p>
+        <h1>页面陈列室</h1>
+        <p class="intro">收纳专题页、整活作品和轻量互动页面。</p>
+      </header>
+      <section class="feature" aria-label="资源列表">
+        <div class="catalog-toolbar">
+          <label class="catalog-search">搜索
+            <input type="search" data-resource-search="pages" placeholder="名称、玩法或标签" />
+          </label>
+          <span class="catalog-count" data-resource-count="pages" role="status"></span>
+        </div>
+        <div class="portal-grid" data-resource-list="pages"></div>
+        <noscript><p>请启用 JavaScript 查看资源列表。</p></noscript>
+        <a class="catalog-back" href="../index.html">返回摸鱼指挥部</a>
+      </section>
     </main>
+    <script src="../assets/js/resources.js"></script>
+    <script src="../assets/js/catalog.js"></script>
   </body>
 </html>
