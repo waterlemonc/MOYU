@@ -29,6 +29,43 @@ const TILE_WIDTH = 72;
 const TILE_HEIGHT = 96;
 const TILE_FACE_INSET = 14;
 let timerIntervalId = null;
+let boardZoomed = false;
+let clearView = true;
+const boardViewButton = document.getElementById("board-view");
+const boardViewport = document.querySelector(".board-viewport");
+const boardZoomButton = document.getElementById("board-zoom");
+function fitBoard() {
+  const slots = getCurrentLevel().slots;
+  let width = Math.max(...slots.map(slot => slot.x + TILE_WIDTH)) + 24;
+  let height = Math.max(...slots.map(slot => slot.y - slot.z * 10 + TILE_HEIGHT)) + 24;
+  const buttons = [...boardEl.querySelectorAll(".tile")];
+  if (clearView) {
+    const columns = Math.max(1, Math.min(10, Math.floor((boardViewport.clientWidth - 14) / 76)));
+    const visible = buttons.filter(button => !button.classList.contains("covered") || state.bombMode);
+    width = columns * 76 + 12;
+    height = Math.max(130, Math.ceil(visible.length / columns) * 96 + 12);
+    buttons.forEach(button => { button.hidden = !visible.includes(button); });
+    visible.forEach((button, index) => {
+      button.style.left = `${12 + (index % columns) * 76}px`;
+      button.style.top = `${12 + Math.floor(index / columns) * 96}px`;
+    });
+  }
+  const scale = clearView || boardZoomed ? 1 : Math.min((boardViewport.clientWidth - 2) / width, 1);
+  boardEl.style.width = `${width}px`;
+  boardEl.style.height = `${height}px`;
+  boardEl.style.marginLeft = clearView ? `${Math.max(0, (boardViewport.clientWidth - width) / 2)}px` : "0";
+  boardEl.style.transform = `scale(${scale})`;
+  const viewLimit = clearView ? (window.innerWidth <= 560 ? 300 : 440) : 520;
+  boardViewport.style.height = `${Math.min(viewLimit, height * scale) + 2}px`;
+  boardViewport.classList.toggle("is-fit", !clearView && !boardZoomed);
+  document.querySelector(".board-area").classList.toggle("is-clear", clearView);
+  boardZoomButton.hidden = clearView;
+  boardViewButton.textContent = clearView ? "查看叠牌" : "清晰选牌";
+  boardViewButton.setAttribute("aria-pressed", String(clearView));
+  document.getElementById("board-view-note").textContent = clearView ? (height > viewLimit ? "可选牌平铺展示，上下滑动查看更多" : "只显示可选牌，消除后自动露出下一层") : "放大后可滑动查看";
+  boardZoomButton.textContent = boardZoomed ? "查看全桌" : "放大牌面";
+  boardZoomButton.setAttribute("aria-pressed", String(boardZoomed));
+}
 
 const tileDefs = [
   { key: "bamboo-1", name: "一索", image: "./assets/mahjong-tiles/Sou1.png" },
@@ -530,11 +567,13 @@ function openUnlockModal() {
 
   qrModal.classList.add("open");
   qrModal.setAttribute("aria-hidden", "false");
+  closeModalButton.focus();
 }
 
 function closeUnlockModal() {
   qrModal.classList.remove("open");
   qrModal.setAttribute("aria-hidden", "true");
+  unlockButton.focus();
 }
 
 function setupQrAsset() {
@@ -583,7 +622,8 @@ function renderBoard() {
     button.style.left = `${slot.x}px`;
     button.style.top = `${slot.y - slot.z * 10}px`;
     button.style.zIndex = String(slot.z * 100 + Math.floor(slot.y));
-    button.ariaLabel = `${tile.name}${covered ? "，当前被上层压住" : "，可点击"}`;
+    button.disabled = state.gameOver || (covered && !state.bombMode);
+    button.ariaLabel = `${tile.name}${state.bombMode ? "，消除同类目标" : covered ? "，当前被上层压住" : "，可点击"}`;
     button.innerHTML = `
       <span class="tile-face">
         <img class="tile-image" src="${tile.image}" alt="${tile.name}" />
@@ -612,12 +652,14 @@ function renderTray() {
 
     if (index === 7 && !state.unlockedExtraSlot) {
       slot.classList.add("locked-slot");
-      slot.innerHTML = "<strong>🔒</strong>";
+      slot.innerHTML = "<span>＋</span>";
+      slot.setAttribute("aria-label", "第 8 格尚未解锁");
       trayEl.appendChild(slot);
       continue;
     }
 
     const tile = state.trayTiles[index];
+    if (!tile) { slot.textContent = index + 1; slot.setAttribute("aria-label", `手牌位置 ${index + 1}，空位`); }
     if (tile) {
       slot.classList.add("filled");
       slot.innerHTML = `
@@ -635,7 +677,11 @@ function renderSidebar() {
   const currentLevel = getCurrentLevel();
   boardCountEl.textContent = String(state.boardTiles.length);
   trayCountEl.textContent = `${state.trayTiles.length} / ${state.trayLimit}`;
-  trayStatusEl.textContent = `当前上限 ${state.trayLimit} 格`;
+  const nearFull = state.trayTiles.length >= state.trayLimit - 2;
+  document.querySelector(".tray-panel").classList.toggle("is-danger", nearFull);
+  trayStatusEl.textContent = nearFull ? `仅剩 ${state.trayLimit - state.trayTiles.length} 格` : `${state.trayLimit - state.trayTiles.length} 个空位`;
+  bombButton.classList.toggle("is-active", state.bombMode);
+  bombButton.setAttribute("aria-pressed", String(state.bombMode));
   levelLabelEl.textContent = `${currentLevel.title} / 共 ${levelCount} 关`;
   levelPillEl.textContent = `${currentLevel.title} · ${currentLevel.subtitle}`;
   removeThreeCountEl.textContent = String(state.toolUses.removeThree);
@@ -655,15 +701,34 @@ function render() {
   renderBoard();
   renderTray();
   renderSidebar();
+  fitBoard();
 }
 
 function startNewRun() {
   state = createBaseState();
   state.runStartAt = Date.now();
-  loadLevel(0, "第一关开始，先把最上层和最边缘的牌清出来。");
+  loadLevel(0, "第一关开始，先观察手牌，再选择同类的可用牌。");
   startTimer();
 }
 
+boardViewButton.addEventListener("click", () => {
+  clearView = !clearView;
+  boardViewport.scrollTo(0, 0);
+  render();
+});
+boardZoomButton.addEventListener("click", () => {
+  boardZoomed = !boardZoomed;
+  fitBoard();
+  boardViewport.scrollTo(0, 0);
+});
+window.addEventListener("resize", fitBoard, { passive: true });
+qrModal.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeUnlockModal();
+  if (event.key === "Tab") {
+    if (event.shiftKey && document.activeElement === closeModalButton) { event.preventDefault(); confirmUnlockButton.focus(); }
+    else if (!event.shiftKey && document.activeElement === confirmUnlockButton) { event.preventDefault(); closeModalButton.focus(); }
+  }
+});
 restartButton.addEventListener("click", startNewRun);
 removeThreeButton.addEventListener("click", useRemoveThree);
 bombButton.addEventListener("click", activateBomb);

@@ -3,132 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>麻将消消乐</title>
-    <link rel="stylesheet" href="mahjong-match.css" />
+    <title>麻将消消乐 | MOYU</title>
+    <link rel="stylesheet" href="mahjong-match.css?v=20261013-clear" />
   </head>
   <body>
     <main class="shell">
-      <section class="hero">
-        <div>
-          <p class="eyebrow">MOYU MAHJONG</p>
-          <h1>麻将消消乐</h1>
-          <p>现在改成两关挑战模式：第一关偏简单，第二关更接近羊了个羊式的层叠压牌。凑齐 3 张相同麻将会自动消除，两关全部清空后会记录本次用时。</p>
-        </div>
-
-        <div class="top-actions">
-          <button class="primary" id="restart-button" type="button">重新开局</button>
-          <a class="button-link secondary" href="../index.html">返回摸鱼指挥部</a>
-        </div>
-      </section>
-
+      <header class="site-header"><a class="brand" href="../"><span class="brand-mark" aria-hidden="true">M</span> MOYU <span>小游戏仓</span></a><nav aria-label="返回导航"><a href="./">← 小游戏仓</a><a href="../">首页 ↗</a></nav></header>
+      <section class="hero"><div><p class="eyebrow">MATCH THREE / MAHJONG</p><h1>麻将消消乐</h1><p class="intro">选出未被遮挡的牌，放入手牌区。集齐三张相同牌，自动消除。</p></div><button class="secondary" id="restart-button" type="button">↻ 重新开局</button></section>
+      <div class="stats" aria-label="游戏状态"><div class="stat"><span>桌面剩余</span><strong id="board-count">0</strong><small>张</small></div><div class="stat"><span>手牌数量</span><strong id="tray-count">0 / 7</strong></div><div class="stat"><span>挑战计时</span><strong id="timer-text">00:00</strong></div><div class="stat"><span>最佳记录</span><strong id="best-time">--</strong></div><span class="sr-only" id="level-label"></span></div>
       <section class="scene">
         <div class="layout">
-          <section class="board-area">
-            <div class="board-header">
-              <div>
-                <h2>桌面区</h2>
-                <span class="level-pill" id="level-pill">第 1 关 · 热身局</span>
-              </div>
-              <span class="status" id="board-status">选一张没有被压住的麻将开始摸鱼。</span>
-            </div>
-
-            <div class="board" id="board"></div>
-
-            <div class="tray-area">
-              <div class="tray-panel">
-                <div class="tray-head">
-                  <strong>手牌区</strong>
-                  <span id="tray-status">当前上限 7 格</span>
-                </div>
-                <div class="tray" id="tray"></div>
-              </div>
-            </div>
+          <section class="board-area" aria-label="麻将牌桌">
+            <div class="board-header"><div><span class="eyebrow">当前牌局</span><h2 id="level-pill">第 1 关</h2></div><div class="board-view-actions"><button class="view-button" id="board-view" type="button" aria-pressed="true">查看叠牌</button><button class="view-button" id="board-zoom" type="button" aria-pressed="false" hidden>放大牌面</button></div></div>
+            <div class="board-legend"><span><i class="available-dot"></i> 绿色边框：可选</span><span class="covered-note"><i class="covered-dot"></i> 灰色牌面：被遮挡</span><span class="zoom-tip" id="board-view-note">只显示可选牌，消除后自动露出下一层</span></div>
+            <div class="board-viewport"><div class="board" id="board"></div></div>
+            <div class="tray-area"><div class="tray-panel"><div class="tray-head"><strong>手牌区 <span>三张相同，自动消除</span></strong><span id="tray-status">当前上限 7 格</span></div><div class="tray" id="tray"></div></div></div>
+            <p class="status" id="status-text" role="status" aria-live="polite">准备开局</p><span class="sr-only" id="board-status" aria-hidden="true"></span>
           </section>
-
           <aside class="sidebar">
-            <section class="panel">
-              <div class="stats">
-                <div class="stat">
-                  <span>当前关卡</span>
-                  <strong id="level-label">第 1 关</strong>
-                </div>
-                <div class="stat">
-                  <span>桌面剩余</span>
-                  <strong id="board-count">0</strong>
-                </div>
-                <div class="stat">
-                  <span>手牌数量</span>
-                  <strong id="tray-count">0 / 7</strong>
-                </div>
-                <div class="stat">
-                  <span>挑战计时</span>
-                  <strong id="timer-text">00:00</strong>
-                </div>
-                <div class="stat">
-                  <span>最佳记录</span>
-                  <strong id="best-time">--</strong>
-                </div>
-                <div class="stat">
-                  <span>当前状态</span>
-                  <strong id="status-text">准备开局</strong>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel">
-              <h3>辅助功能</h3>
-              <div class="tools">
-                <button class="tool-button" id="remove-three-button" type="button">
-                  <span class="tool-icon" aria-hidden="true">↩</span>
-                  <span class="tool-copy">
-                    <strong>移除三张</strong>
-                    <span>把手牌区最前面的 3 张退回桌面</span>
-                  </span>
-                  <span class="count-badge" id="remove-three-count">1</span>
-                </button>
-
-                <button class="tool-button" id="bomb-button" type="button">
-                  <span class="tool-icon" aria-hidden="true">💣</span>
-                  <span class="tool-copy">
-                    <strong>强力炸弹</strong>
-                    <span>点一张桌面牌，直接炸掉 3 张同类</span>
-                  </span>
-                  <span class="count-badge" id="bomb-count">1</span>
-                </button>
-
-                <button class="tool-button" id="shuffle-button" type="button">
-                  <span class="tool-icon" aria-hidden="true">⟳</span>
-                  <span class="tool-copy">
-                    <strong>随机打乱</strong>
-                    <span>把桌面剩余麻将重新随机摆放</span>
-                  </span>
-                  <span class="count-badge" id="shuffle-count">1</span>
-                </button>
-
-                <button class="tool-button" id="unlock-button" type="button">
-                  <span class="tool-icon" aria-hidden="true">🔓</span>
-                  <span class="tool-copy">
-                    <strong>解锁第 8 格</strong>
-                    <span>弹出二维码提示关注公众号“摸鱼小宇宙”</span>
-                  </span>
-                  <span class="count-badge" id="unlock-count">锁</span>
-                </button>
-              </div>
-            </section>
-
-            <section class="panel tips">
-              <strong>规则说明</strong>
-              只有没有被上层真正压住的麻将才可以点击。第一关用来热身，第二关会更复杂。两关都清空就算通关，手牌达到当前上限且没有触发三消时，本次挑战立即失败。
-            </section>
+            <section class="panel"><div class="panel-heading"><h2>辅助道具</h2><span>每次挑战各 1 次</span></div><div class="tools">
+              <button class="tool-button" id="remove-three-button" type="button"><span class="tool-icon" aria-hidden="true">↩</span><span class="tool-copy"><strong>退回三张</strong><span>将手牌最前面三张退回桌面</span></span><span class="count-badge" id="remove-three-count">1</span></button>
+              <button class="tool-button" id="bomb-button" type="button"><span class="tool-icon" aria-hidden="true">◎</span><span class="tool-copy"><strong>消除同类</strong><span>点击一张牌，消除三张同类</span></span><span class="count-badge" id="bomb-count">1</span></button>
+              <button class="tool-button" id="shuffle-button" type="button"><span class="tool-icon" aria-hidden="true">⟳</span><span class="tool-copy"><strong>重新洗牌</strong><span>打乱桌面剩余牌的位置</span></span><span class="count-badge" id="shuffle-count">1</span></button>
+            </div><button class="unlock-button" id="unlock-button" type="button"><span>＋ 解锁第 8 格</span><span class="count-badge" id="unlock-count">锁</span></button></section>
+            <section class="panel tips"><h2>怎么赢？</h2><ol><li>先选择白底、绿色边框的可用牌。</li><li>凑齐三张同类牌，清空手牌位置。</li><li>清空两关的桌面，完成挑战。</li></ol><p>手牌填满且无法三消，本次挑战结束。选择前，先看看手牌里已有哪几种。</p></section>
           </aside>
         </div>
       </section>
+      <footer class="page-footer">MOYU MAHJONG · 看清一张，再选下一张</footer>
     </main>
-
-    <div class="modal" id="qr-modal" aria-hidden="true">
+    <div class="modal" id="qr-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="unlock-title">
       <div class="modal-card">
-        <h3>解锁第 8 格</h3>
-        <p>关注公众号“摸鱼小宇宙”即可解锁额外手牌格。这里先给你保留了弹窗与二维码展示位。</p>
+        <h3 id="unlock-title">多一格，从容一点</h3>
+        <p>关注「摸鱼小宇宙」，确认后为本次挑战增加一个手牌位置。</p>
 
         <div class="qr-frame">
           <img class="qr-image" id="qr-image" src="../assets/images/moyu-xiaoyuzhou-qr.jpg" alt="摸鱼小宇宙公众号二维码" />
@@ -201,6 +108,6 @@
       </div>
     </div>
 
-    <script src="mahjong-match.js"></script>
+    <script src="mahjong-match.js?v=20261013-clear"></script>
   </body>
 </html>
