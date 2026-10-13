@@ -4,18 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>麻将消消乐 | MOYU</title>
-    <link rel="stylesheet" href="mahjong-match.css?v=20261013-clear" />
+    <link rel="stylesheet" href="mahjong-match.css?v=20261013-stacked" />
   </head>
   <body>
     <main class="shell">
       <header class="site-header"><a class="brand" href="../"><span class="brand-mark" aria-hidden="true">M</span> MOYU <span>小游戏仓</span></a><nav aria-label="返回导航"><a href="./">← 小游戏仓</a><a href="../">首页 ↗</a></nav></header>
-      <section class="hero"><div><p class="eyebrow">MATCH THREE / MAHJONG</p><h1>麻将消消乐</h1><p class="intro">选出未被遮挡的牌，放入手牌区。集齐三张相同牌，自动消除。</p></div><button class="secondary" id="restart-button" type="button">↻ 重新开局</button></section>
+      <section class="hero"><div><p class="eyebrow">MATCH THREE / MAHJONG</p><h1>麻将消消乐</h1><p class="intro">从重叠牌堆中选出未被压住的牌。手牌集齐三张相同麻将，自动消除。</p></div><button class="secondary" id="restart-button" type="button">↻ 重新开局</button></section>
       <div class="stats" aria-label="游戏状态"><div class="stat"><span>桌面剩余</span><strong id="board-count">0</strong><small>张</small></div><div class="stat"><span>手牌数量</span><strong id="tray-count">0 / 7</strong></div><div class="stat"><span>挑战计时</span><strong id="timer-text">00:00</strong></div><div class="stat"><span>最佳记录</span><strong id="best-time">--</strong></div><span class="sr-only" id="level-label"></span></div>
       <section class="scene">
         <div class="layout">
           <section class="board-area" aria-label="麻将牌桌">
-            <div class="board-header"><div><span class="eyebrow">当前牌局</span><h2 id="level-pill">第 1 关</h2></div><div class="board-view-actions"><button class="view-button" id="board-view" type="button" aria-pressed="true">查看叠牌</button><button class="view-button" id="board-zoom" type="button" aria-pressed="false" hidden>放大牌面</button></div></div>
-            <div class="board-legend"><span><i class="available-dot"></i> 绿色边框：可选</span><span class="covered-note"><i class="covered-dot"></i> 灰色牌面：被遮挡</span><span class="zoom-tip" id="board-view-note">只显示可选牌，消除后自动露出下一层</span></div>
+            <div class="board-header"><div><span class="eyebrow">当前牌局</span><h2 id="level-pill">第 1 关</h2></div><button class="view-button" id="board-zoom" type="button" aria-pressed="false">放大牌面</button></div>
+            <div class="board-legend"><span><i class="available-dot"></i> 绿色边框：可选</span><span class="covered-note"><i class="covered-dot"></i> 灰色牌面：被遮挡</span><span class="zoom-tip" id="board-view-note">放大后可滑动查看</span></div>
             <div class="board-viewport"><div class="board" id="board"></div></div>
             <div class="tray-area"><div class="tray-panel"><div class="tray-head"><strong>手牌区 <span>三张相同，自动消除</span></strong><span id="tray-status">当前上限 7 格</span></div><div class="tray" id="tray"></div></div></div>
             <p class="status" id="status-text" role="status" aria-live="polite">准备开局</p><span class="sr-only" id="board-status" aria-hidden="true"></span>
@@ -108,6 +108,6 @@
       </div>
     </div>
 
-    <script src="mahjong-match.js?v=20261013-clear"></script>
+    <script src="mahjong-match.js?v=20261013-stacked"></script>
   </body>
 </html>

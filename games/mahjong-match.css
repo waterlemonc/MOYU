@@ -31,12 +31,3 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--good); outline-
 
 .board-viewport.is-fit { overflow: hidden; }
 .tile:disabled { opacity: 1; }
-
-.board-view-actions { display: flex; gap: 8px; }
-.is-clear .covered-note { display: none; }
-.is-clear .zoom-tip { margin-left: 0; }
-.tile[hidden] { display: none; }
-@media (max-width: 560px) { .board-header { flex-wrap: wrap; }.board-view-actions { gap: 6px; }.board-view-actions button { font-size: 10px; padding-inline: 8px; } }
-
-.is-clear .tile { width: 64px; height: 86px; }
-.is-clear .zoom-tip { display: inline-flex; }

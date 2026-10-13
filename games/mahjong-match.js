@@ -30,39 +30,18 @@ const TILE_HEIGHT = 96;
 const TILE_FACE_INSET = 14;
 let timerIntervalId = null;
 let boardZoomed = false;
-let clearView = true;
-const boardViewButton = document.getElementById("board-view");
 const boardViewport = document.querySelector(".board-viewport");
 const boardZoomButton = document.getElementById("board-zoom");
 function fitBoard() {
   const slots = getCurrentLevel().slots;
-  let width = Math.max(...slots.map(slot => slot.x + TILE_WIDTH)) + 24;
-  let height = Math.max(...slots.map(slot => slot.y - slot.z * 10 + TILE_HEIGHT)) + 24;
-  const buttons = [...boardEl.querySelectorAll(".tile")];
-  if (clearView) {
-    const columns = Math.max(1, Math.min(10, Math.floor((boardViewport.clientWidth - 14) / 76)));
-    const visible = buttons.filter(button => !button.classList.contains("covered") || state.bombMode);
-    width = columns * 76 + 12;
-    height = Math.max(130, Math.ceil(visible.length / columns) * 96 + 12);
-    buttons.forEach(button => { button.hidden = !visible.includes(button); });
-    visible.forEach((button, index) => {
-      button.style.left = `${12 + (index % columns) * 76}px`;
-      button.style.top = `${12 + Math.floor(index / columns) * 96}px`;
-    });
-  }
-  const scale = clearView || boardZoomed ? 1 : Math.min((boardViewport.clientWidth - 2) / width, 1);
+  const width = Math.max(...slots.map(slot => slot.x + TILE_WIDTH)) + 24;
+  const height = Math.max(...slots.map(slot => slot.y - slot.z * 10 + TILE_HEIGHT)) + 24;
+  const scale = boardZoomed ? 1 : Math.min((boardViewport.clientWidth - 2) / width, 1);
   boardEl.style.width = `${width}px`;
   boardEl.style.height = `${height}px`;
-  boardEl.style.marginLeft = clearView ? `${Math.max(0, (boardViewport.clientWidth - width) / 2)}px` : "0";
   boardEl.style.transform = `scale(${scale})`;
-  const viewLimit = clearView ? (window.innerWidth <= 560 ? 300 : 440) : 520;
-  boardViewport.style.height = `${Math.min(viewLimit, height * scale) + 2}px`;
-  boardViewport.classList.toggle("is-fit", !clearView && !boardZoomed);
-  document.querySelector(".board-area").classList.toggle("is-clear", clearView);
-  boardZoomButton.hidden = clearView;
-  boardViewButton.textContent = clearView ? "查看叠牌" : "清晰选牌";
-  boardViewButton.setAttribute("aria-pressed", String(clearView));
-  document.getElementById("board-view-note").textContent = clearView ? (height > viewLimit ? "可选牌平铺展示，上下滑动查看更多" : "只显示可选牌，消除后自动露出下一层") : "放大后可滑动查看";
+  boardViewport.style.height = `${Math.min(520, height * scale) + 2}px`;
+  boardViewport.classList.toggle("is-fit", !boardZoomed);
   boardZoomButton.textContent = boardZoomed ? "查看全桌" : "放大牌面";
   boardZoomButton.setAttribute("aria-pressed", String(boardZoomed));
 }
@@ -711,11 +690,6 @@ function startNewRun() {
   startTimer();
 }
 
-boardViewButton.addEventListener("click", () => {
-  clearView = !clearView;
-  boardViewport.scrollTo(0, 0);
-  render();
-});
 boardZoomButton.addEventListener("click", () => {
   boardZoomed = !boardZoomed;
   fitBoard();
