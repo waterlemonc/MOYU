@@ -46,7 +46,10 @@ function walk(directory) {
 }
 const files = walk(root);
 for (const file of files) {
-  if (file.endsWith(".js")) execFileSync(process.execPath, ["--check", file]);
+  if (file.endsWith(".js") || file.endsWith(".mjs")) {
+    execFileSync(process.execPath, ["--check", file]);
+    for (const match of readFileSync(file, "utf8").matchAll(/from\s+["'](\.{1,2}\/[^"']+)["']/g)) checkPath(match[1], path.dirname(file));
+  }
   if (file.endsWith(".html")) {
     const html = readFileSync(file, "utf8");
     for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {

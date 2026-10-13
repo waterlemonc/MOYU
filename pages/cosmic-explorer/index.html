@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="在动态 3D 太阳系中探索八大行星，观察自转、公转、昼夜光照与土星环。" />
+    <title>宇宙漫游 · MOYU</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="universe" aria-label="可拖拽与缩放的三维太阳系"></div>
+    <div class="space-vignette" aria-hidden="true"></div>
+    <header class="space-header"><a class="space-brand" href="../../"><span class="brand-icon" aria-hidden="true">✦</span><strong>宇宙漫游<span>COSMIC EXPLORER</span></strong></a><div class="header-actions"><button id="overview" type="button">太阳系总览 ↗</button><a href="../">返回资源</a><button id="toggle-info" type="button" aria-expanded="true" aria-controls="planet-info">隐藏面板</button></div></header>
+    <main>
+      <aside class="planet-info" id="planet-info" aria-labelledby="planet-name">
+        <div class="section-label"><span class="live-dot"></span> 星际观察站 <span id="body-index">03 / 08</span></div>
+        <p class="planet-english" id="planet-english">EARTH</p><h1 id="planet-name">地球</h1><p class="planet-subtitle" id="planet-subtitle">我们的蓝色家园</p>
+        <p id="planet-description">蓝色海洋、白色云带与大陆共同构成我们的家园。</p>
+        <dl class="planet-facts"><div><dt>直径</dt><dd id="diameter">12,742 <small>km</small></dd></div><div><dt>公转周期</dt><dd id="period">365.3 <small>天</small></dd></div><div><dt>自转周期</dt><dd id="rotation">23.9 <small>小时</small></dd></div><div><dt>距太阳</dt><dd id="distance">1.00 <small>AU</small></dd></div></dl>
+        <div class="observe-actions"><button id="close-up" type="button">近距离观察</button><button id="follow" type="button" aria-pressed="true">跟随星球 ✓</button></div>
+        <details class="science-note"><summary>关于这片宇宙</summary><p>公转按开普勒轨道计算，包含偏心率与轨道倾角。距离压缩、星球放大以便观察；初始相位用于演示，不代表实时星历。AU 为地球到太阳的平均距离，约 1.496 亿公里。月球轨道也经过放大，未模拟行星间引力扰动。</p></details>
+      </aside>
+      <div class="scene-caption"><span class="caption-line"></span><div><strong id="view-label">地球轨道</strong><p>拖拽环绕 · 滚轮缩放 · 点击星球探索</p></div></div>
+      <div id="loading" class="loading" role="status"><span></span>正在展开星图…</div>
+      <div id="fallback" class="fallback" hidden><h2>三维星图暂时无法启动</h2><p>请使用支持 WebGL 的浏览器，或开启硬件加速后重新打开。</p><a href="../../">返回摸鱼指挥部</a></div>
+    </main>
+    <footer class="mission-control">
+      <div class="planet-strip" id="planet-strip" aria-label="选择探索星球"></div>
+      <div class="time-controls"><button id="pause" type="button" aria-pressed="false">Ⅱ 暂停</button><label class="time-speed" for="speed"><span>时间流速 <output id="speed-label">72 分钟 / 秒</output></span><input id="speed" type="range" min="-4" max="1.5" step="0.1" value="-1.3" /></label><div class="simulation-clock"><span>模拟已过</span><strong id="elapsed">0.0 天</strong></div><label class="orbit-toggle"><input id="show-orbits" type="checkbox" checked /> 显示轨道</label><button id="reset" type="button">↺ 重置</button></div>
+    </footer>
+    <script type="module" src="main.mjs"></script>
+  </body>
+</html>

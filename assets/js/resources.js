@@ -6,6 +6,17 @@ window.MOYU_CATALOG = {
   ],
   resources: [
     {
+      id: "cosmic-explorer",
+      category: "pages",
+      title: "宇宙漫游",
+      symbol: "✦",
+      description: "飞入动态 3D 太阳系，观察星球昼夜、土星环与轨道运动，自由探索八大行星。",
+      path: "pages/cosmic-explorer/",
+      tags: ["3D", "宇宙", "探索"],
+      featured: true,
+      tone: "sky",
+    },
+    {
       id: "stick-tower-hero",
       category: "games",
       title: "火柴人爬塔英雄",

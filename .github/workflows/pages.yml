@@ -35,6 +35,7 @@ jobs:
           node scripts/check-site.mjs
           node scripts/check-tower-levels.mjs
           node scripts/check-sand-engine.mjs
+          node scripts/check-cosmic-orbits.mjs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
