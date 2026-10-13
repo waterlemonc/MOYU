@@ -32,7 +32,7 @@ window.MOYU_CATALOG = {
       category: "games",
       title: "彩砂流动画板",
       symbol: "≈",
-      description: "点击或拖动喷出彩色粒子，看落沙逐渐堆成沙丘，轻松发呆和解压。",
+      description: "用细砂分层配色，画地形、擦除与暂停创作，保存你的彩砂作品。",
       path: "games/sand-paint.html",
       tags: ["解压", "互动"],
       featured: true,

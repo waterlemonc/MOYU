@@ -3,42 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>彩砂流动画板</title>
-    <link rel="stylesheet" href="sand-paint.css" />
+    <title>彩砂流动画板 | MOYU</title>
+    <link rel="stylesheet" href="sand-paint.css?v=20261013-studio" />
   </head>
   <body>
-    <canvas id="sand-canvas" aria-label="彩砂流动画板"></canvas>
-
-    <div class="hud">
-      <section class="panel">
-        <div class="panel-nav"><p class="eyebrow">MOYU SAND STUDIO</p><a class="back-link" href="./">← 返回小游戏</a></div>
-        <h1>彩砂流动画板</h1>
-        <p>按住鼠标点击或滑动，屏幕会喷出彩色线条与粒子。彩砂会在重力作用下落到底端，并在底部慢慢堆出一条发光沙丘。</p>
-        <div class="controls">
-          <label class="control-group" for="color-picker">
-            <span class="control-label">画笔颜色</span>
-            <input class="color-picker" id="color-picker" type="color" value="#ff8b5e" />
-            <span class="current-color" id="current-color">暖橘</span>
-          </label>
-
-          <label class="control-group" for="rainbow-toggle">
-            <span class="control-label">彩虹模式</span>
-            <input class="toggle" id="rainbow-toggle" type="checkbox" checked />
-          </label>
-        </div>
-        <div class="stats">
-          <span class="pill" id="grain-count">活跃粒子 0</span>
-          <span class="pill" id="pile-count">堆积沙粒 0</span>
-          <span class="pill" id="fps-count">渲染状态 稳定</span>
-        </div>
-      </section>
-
-      <aside class="tip">
-        <strong>小提示</strong>
-        <span>快速甩动会拉出更长的彩色丝带。慢慢画时，落沙会更集中，更容易堆出柔和的沙脊。</span>
-      </aside>
-    </div>
-
-    <script src="sand-paint.js"></script>
+    <canvas id="sand-canvas" aria-label="彩砂创作画布：落沙、画地形或擦除"></canvas>
+    <header class="studio-header">
+      <a class="studio-brand" href="./" aria-label="返回小游戏仓"><span aria-hidden="true">M</span><strong>彩砂画板</strong></a>
+      <div class="header-actions">
+        <button id="toggle-tools" type="button" aria-expanded="true" aria-controls="tool-panel">收起工具</button>
+        <button id="pause-button" type="button" aria-pressed="false">暂停流动</button>
+        <button id="export-button" class="primary" type="button">保存图片 ↗</button>
+      </div>
+    </header>
+    <aside class="tool-panel" id="tool-panel" aria-label="画板工具">
+      <div class="panel-heading"><div><p>MOYU SAND STUDIO</p><h1>让颜色慢慢落下</h1></div><button id="close-tools" type="button" aria-label="收起工具">×</button></div>
+      <div class="tool-modes" role="group" aria-label="绘画工具">
+        <button type="button" data-tool="sand" aria-pressed="true">落沙</button>
+        <button type="button" data-tool="wall" aria-pressed="false">固定画笔</button>
+        <button type="button" data-tool="erase" aria-pressed="false">橡皮擦</button>
+      </div>
+      <div class="field-heading"><label for="color-picker">画笔颜色</label><label class="rainbow-label"><input type="checkbox" id="rainbow-toggle" /> 彩虹</label></div>
+      <div class="palette" aria-label="常用颜色">
+        <button style="--swatch:#ef9463" data-color="#ef9463" aria-label="暖橘" type="button" aria-pressed="true"></button>
+        <button style="--swatch:#e9c46a" data-color="#e9c46a" aria-label="沙金" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#8ebc9a" data-color="#8ebc9a" aria-label="草绿" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#67b9be" data-color="#67b9be" aria-label="湖蓝" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#779dcc" data-color="#779dcc" aria-label="天空蓝" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#aa95cf" data-color="#aa95cf" aria-label="浅紫" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#d88da8" data-color="#d88da8" aria-label="粉红" type="button" aria-pressed="false"></button>
+        <button style="--swatch:#f3ead9" data-color="#f3ead9" aria-label="米白" type="button" aria-pressed="false"></button>
+      </div>
+      <div class="custom-color"><input id="color-picker" type="color" value="#ef9463" aria-label="自定义画笔颜色" /><span id="current-color">#EF9463</span><span>自选颜色</span></div>
+      <label class="range-field" for="brush-size"><span>画笔宽度 <output id="brush-value">12 px</output></span><input id="brush-size" type="range" min="2" max="60" value="12" /></label>
+      <label class="range-field" for="flow-rate"><span>落沙密度 <output id="flow-value">35%</output></span><input id="flow-rate" type="range" min="5" max="100" value="35" /></label>
+      <div class="edit-actions"><button id="undo-button" type="button" disabled>↶ 撤销</button><button id="clear-button" type="button">清空画布</button></div>
+      <details class="settings"><summary>更多设置</summary><label>砂粒大小<select id="grain-size"><option value="1">1 px · 极细</option><option value="2" selected>2 px · 细砂</option><option value="3">3 px · 粗砂</option></select></label><label>流动速度<select id="gravity-speed"><option value="1">慢</option><option value="3" selected>正常</option><option value="6">快</option></select></label><label>画布背景<select id="background"><option value="#14212a">深色</option><option value="#f5efdf">浅色纸张</option><option value="#282436">夜紫</option></select></label></details>
+      <details class="help"><summary>操作提示</summary><p>按住画布落沙，拖动画出彩色层次。用固定画笔搭建挡板和地形；橡皮擦可移除砂粒与地形。暂停后可精细描绘，撤销返回上一步。保存图片不包含工具面板。</p></details>
+    </aside>
+    <footer class="studio-status"><span id="grain-count">砂粒 0</span><span id="tool-status">落沙 · 2 px 细砂</span><span id="action-status" role="status" aria-live="polite"></span></footer>
+    <script src="sand-engine.js?v=20261013-studio"></script>
+    <script src="sand-paint.js?v=20261013-studio"></script>
   </body>
 </html>

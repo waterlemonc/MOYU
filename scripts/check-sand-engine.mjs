@@ -1,0 +1,42 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+const context = { window: {} };
+vm.runInNewContext(readFileSync(new URL("../games/sand-engine.js", import.meta.url), "utf8"), context);
+const SandWorld = context.window.SandWorld;
+const world = new SandWorld(80, 60);
+const red = 0xff0000ff, blue = 0xffff0000;
+for (let y = 0; y < 20; y++) for (let x = 36; x < 46; x++) world.pour(x, y, y % 2 ? red : blue);
+assert.equal(world.sandCount, 200);
+assert.equal(world.pour(36, 0, red), false, "A grain must not overwrite another grain");
+function settle(target) { for (let i = 0; i < 400 && target.needsSimulation; i++) target.step(); assert.equal(target.needsSimulation, false); }
+settle(world);
+assert.equal(world.sandCount, 200);
+assert.equal(Array.from(world.types).filter(type => type === 1).length, 200);
+assert.equal(Array.from(world.colors).filter(color => color === red).length, 100);
+assert.equal(Array.from(world.colors).filter(color => color === blue).length, 100);
+for (let y = 0; y < world.rows - 1; y++) for (let x = 0; x < world.cols; x++) {
+  if (world.types[y * world.cols + x] === 1) assert(world.types[(y + 1) * world.cols + x], "Settled sand must have actual support beneath it");
+}
+const saved = world.snapshot();
+world.clear(); assert.equal(world.sandCount, 0); assert.equal(world.wallCount, 0);
+world.restore(saved);
+assert.deepEqual(Array.from(world.types), Array.from(saved.types));
+assert.deepEqual(Array.from(world.colors), Array.from(saved.colors));
+world.clear();
+for (let x = 0; x < world.cols; x++) world.set(x, 30, 2, blue);
+for (let y = 0; y < 15; y++) world.pour(40, y, red);
+settle(world);
+assert.equal(world.wallCount, 80);
+assert.equal(world.sandCount, 15);
+assert(!Array.from(world.types.slice(31 * world.cols)).includes(1), "A solid platform must stop grains");
+for (let x = 37; x <= 43; x++) world.set(x, 30, 0);
+settle(world);
+assert(Array.from(world.types.slice(31 * world.cols)).includes(1), "Erasing a platform must release the grains above it");
+assert.equal(world.sandCount, 15);
+const resized = new SandWorld(100, 80);
+resized.restore(world.snapshot());
+assert(resized.sandCount > 0 && resized.wallCount > 0, "Resizing must retain the artwork");
+assert.equal(world.set(-1, 0, 1, red), false);
+assert.equal(world.set(world.cols, 0, 1, red), false);
+console.log("Sand checks passed: occupancy, conserved grain/color counts, supported piles, wall collisions, erasing releases sand, undo snapshots and resize preservation.");

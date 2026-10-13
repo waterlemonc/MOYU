@@ -1,441 +1,192 @@
 const canvas = document.getElementById("sand-canvas");
 const ctx = canvas.getContext("2d", { alpha: false });
-const grainCountEl = document.getElementById("grain-count");
-const pileCountEl = document.getElementById("pile-count");
-const fpsCountEl = document.getElementById("fps-count");
+const raster = document.createElement("canvas");
+const rasterCtx = raster.getContext("2d");
+const panel = document.getElementById("tool-panel");
+const panelToggle = document.getElementById("toggle-tools");
+const pauseButton = document.getElementById("pause-button");
 const colorPicker = document.getElementById("color-picker");
-const currentColorEl = document.getElementById("current-color");
 const rainbowToggle = document.getElementById("rainbow-toggle");
+const brushSize = document.getElementById("brush-size");
+const flowRate = document.getElementById("flow-rate");
+const grainSize = document.getElementById("grain-size");
+const gravitySpeed = document.getElementById("gravity-speed");
+const background = document.getElementById("background");
+const undoButton = document.getElementById("undo-button");
+const status = document.getElementById("action-status");
+const littleEndian = new Uint8Array(new Uint32Array([0x01020304]).buffer)[0] === 4;
+let world, imageData, pixels, width = 0, height = 0, cellSize = 2;
+let tool = "sand", paused = false, hue = 20, previousTime = 0, accumulator = 0;
+let pointer = null;
+let lastStats = 0;
+const history = [];
 
-const backgroundCanvas = document.createElement("canvas");
-const backgroundCtx = backgroundCanvas.getContext("2d", { alpha: false });
-const settledCanvas = document.createElement("canvas");
-const settledCtx = settledCanvas.getContext("2d");
-
-let width = 0;
-let height = 0;
-let dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-let hueSeed = 12;
-let settledCount = 0;
-let lastTimestamp = 0;
-
-const maxParticles = 1800;
-const burstMin = 4;
-const burstMax = 8;
-const pileStep = 6;
-let pileHeights = [];
-
-const particles = [];
-const brush = {
-  rainbow: true,
-  hex: "#ff8b5e",
-  hue: 18,
-  saturation: 100,
-  lightness: 68,
-};
-const pointer = {
-  active: false,
-  x: 0,
-  y: 0,
-  prevX: 0,
-  prevY: 0,
-  hue: 0,
-  stillness: 0,
-};
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
+function packedColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return littleEndian ? ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0 : ((r << 24) | (g << 16) | (b << 8) | 255) >>> 0;
 }
-
-function hexToHsl(hex) {
-  const normalized = hex.replace("#", "");
-  const value = normalized.length === 3
-    ? normalized.split("").map((part) => part + part).join("")
-    : normalized;
-  const r = parseInt(value.slice(0, 2), 16) / 255;
-  const g = parseInt(value.slice(2, 4), 16) / 255;
-  const b = parseInt(value.slice(4, 6), 16) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
-  const delta = max - min;
-
-  if (delta !== 0) {
-    s = delta / (1 - Math.abs(2 * l - 1));
-
-    switch (max) {
-      case r:
-        h = 60 * (((g - b) / delta) % 6);
-        break;
-      case g:
-        h = 60 * ((b - r) / delta + 2);
-        break;
-      default:
-        h = 60 * ((r - g) / delta + 4);
-        break;
-    }
+function rainbowColor() {
+  const h = (hue % 360) / 60;
+  const c = 0.68, x = c * (1 - Math.abs(h % 2 - 1)), m = 0.18;
+  const [r, g, b] = h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
+  return packedColor(`#${[r, g, b].map(value => Math.round((value + m) * 255).toString(16).padStart(2, "0")).join("")}`);
+}
+function remember() {
+  history.push(world.snapshot());
+  let bytes = history.reduce((sum, snapshot) => sum + snapshot.types.byteLength + snapshot.colors.byteLength, 0);
+  while (history.length > 6 || (bytes > 24 * 1024 * 1024 && history.length > 1)) {
+    const removed = history.shift();
+    bytes -= removed.types.byteLength + removed.colors.byteLength;
   }
-
-  return {
-    hue: (h + 360) % 360,
-    saturation: Math.round(s * 100),
-    lightness: Math.round(l * 100),
-  };
+  undoButton.disabled = false;
 }
-
-function updateBrushFromHex(hex) {
-  brush.hex = hex;
-  const hsl = hexToHsl(hex);
-  brush.hue = hsl.hue;
-  brush.saturation = Math.max(60, hsl.saturation);
-  brush.lightness = Math.max(48, hsl.lightness);
-}
-
-function updateColorLabel() {
-  currentColorEl.textContent = brush.rainbow ? "彩虹" : brush.hex.toUpperCase();
-}
-
 function resize() {
+  pointer = null;
+  const saved = world?.snapshot();
   width = window.innerWidth;
   height = window.innerHeight;
-  dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-
-  canvas.width = Math.floor(width * dpr);
-  canvas.height = Math.floor(height * dpr);
-  backgroundCanvas.width = canvas.width;
-  backgroundCanvas.height = canvas.height;
-  settledCanvas.width = canvas.width;
-  settledCanvas.height = canvas.height;
-
-  canvas.style.width = width + "px";
-  canvas.style.height = height + "px";
-
+  // Bound memory on large displays while retaining small grains on typical screens.
+  cellSize = Math.max(Number(grainSize.value), Math.ceil(Math.sqrt(width * height / 1500000)));
+  world = new window.SandWorld(Math.ceil(width / cellSize), Math.ceil(height / cellSize));
+  if (saved) world.restore(saved);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  backgroundCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  settledCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  pileHeights = new Array(Math.ceil(width / pileStep) + 2).fill(height - 10);
-  settledCount = 0;
-  particles.length = 0;
-  renderBackground();
-  settledCtx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = false;
+  raster.width = world.cols;
+  raster.height = world.rows;
+  imageData = rasterCtx.createImageData(world.cols, world.rows);
+  pixels = new Uint32Array(imageData.data.buffer);
+  refreshLabels();
+  draw();
 }
-
-function renderBackground() {
-  backgroundCtx.clearRect(0, 0, width, height);
-
-  const sky = backgroundCtx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, "#11213a");
-  sky.addColorStop(0.58, "#181a2e");
-  sky.addColorStop(1, "#2c1830");
-  backgroundCtx.fillStyle = sky;
-  backgroundCtx.fillRect(0, 0, width, height);
-
-  const glowTop = backgroundCtx.createRadialGradient(
-    width * 0.35,
-    height * 0.18,
-    20,
-    width * 0.35,
-    height * 0.18,
-    width * 0.5
-  );
-  glowTop.addColorStop(0, "rgba(86, 172, 255, 0.22)");
-  glowTop.addColorStop(1, "rgba(86, 172, 255, 0)");
-  backgroundCtx.fillStyle = glowTop;
-  backgroundCtx.fillRect(0, 0, width, height);
-
-  const glowBottom = backgroundCtx.createRadialGradient(
-    width * 0.78,
-    height * 0.84,
-    20,
-    width * 0.78,
-    height * 0.84,
-    width * 0.32
-  );
-  glowBottom.addColorStop(0, "rgba(255, 123, 84, 0.12)");
-  glowBottom.addColorStop(1, "rgba(255, 123, 84, 0)");
-  backgroundCtx.fillStyle = glowBottom;
-  backgroundCtx.fillRect(0, 0, width, height);
+function draw() {
+  if (!world.dirty) return;
+  const bg = packedColor(background.value);
+  for (let i = 0; i < pixels.length; i++) pixels[i] = world.types[i] ? world.colors[i] : bg;
+  rasterCtx.putImageData(imageData, 0, 0);
+  ctx.fillStyle = background.value;
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(raster, 0, 0, world.cols * cellSize, world.rows * cellSize);
+  world.dirty = false;
 }
-
-function drawSettledGrain(x, y, radius, color) {
-  settledCtx.globalAlpha = 0.92;
-  settledCtx.fillStyle = color;
-  settledCtx.beginPath();
-  settledCtx.arc(x, y, radius, 0, Math.PI * 2);
-  settledCtx.fill();
-
-  settledCtx.globalAlpha = 0.22;
-  settledCtx.fillStyle = "#fff7ea";
-  settledCtx.beginPath();
-  settledCtx.arc(x - radius * 0.18, y - radius * 0.18, Math.max(0.6, radius * 0.42), 0, Math.PI * 2);
-  settledCtx.fill();
-  settledCtx.globalAlpha = 1;
-}
-
-function addPile(x, radius, color) {
-  const centerIndex = clamp(Math.floor(x / pileStep), 0, pileHeights.length - 1);
-  const baseY = pileHeights[centerIndex] || (height - 10);
-  const y = baseY - radius * 0.15;
-  const spread = Math.max(2, Math.ceil(radius * 1.25));
-
-  drawSettledGrain(x, y, radius, color);
-  settledCount += 1;
-
-  for (let offset = -spread; offset <= spread; offset += 1) {
-    const column = centerIndex + offset;
-    if (column < 0 || column >= pileHeights.length) {
-      continue;
-    }
-
-    const influence = 1 - Math.abs(offset) / (spread + 1);
-    pileHeights[column] -= Math.max(0.14, radius * 0.34 * influence);
-    pileHeights[column] = Math.max(height * 0.28, pileHeights[column]);
-  }
-}
-
-function spawnParticle(x, y, dx, dy, strength) {
-  if (particles.length >= maxParticles) {
-    return false;
-  }
-
-  const angleJitter = (Math.random() - 0.5) * 0.8;
-  const speed = 0.5 + Math.random() * 1.6 + strength * 0.025;
-  const verticalBonus = ((height - y) / Math.max(height, 1)) * 90;
-  const hue = brush.rainbow
-    ? (pointer.hue + Math.random() * 34) % 360
-    : (brush.hue + (Math.random() - 0.5) * 12 + 360) % 360;
-  const saturation = brush.rainbow ? 92 : clamp(brush.saturation + 8, 70, 100);
-  const lightness = brush.rainbow
-    ? 60 + Math.random() * 12
-    : clamp(brush.lightness + Math.random() * 8 - 4, 48, 76);
-
-  particles.push({
-    x,
-    y,
-    prevX: x,
-    prevY: y,
-    vx: dx * (0.05 + Math.random() * 0.02) + Math.cos(angleJitter) * speed,
-    vy: dy * (0.04 + Math.random() * 0.02) - 0.8 + Math.sin(angleJitter) * speed,
-    radius: 1.5 + Math.random() * 2.1,
-    life: 120 + verticalBonus + Math.random() * 50,
-    color: `hsl(${hue} ${saturation}% ${lightness}%)`,
-  });
-
-  return true;
-}
-
-function spawnBurst(x, y, movementX, movementY, distance) {
-  const loadFactor = particles.length / maxParticles;
-  const densityFactor = loadFactor > 0.88 ? 0.45 : loadFactor > 0.72 ? 0.7 : 1;
-  const speedBonus = Math.min(10, Math.floor(distance / 10));
-  const burst = Math.max(
-    2,
-    Math.round((burstMin + Math.min(burstMax + speedBonus, Math.floor(distance / 12))) * densityFactor)
-  );
-
-  for (let i = 0; i < burst; i += 1) {
-    const created = spawnParticle(x, y, movementX, movementY, distance);
-    if (!created) {
-      break;
+function paintDisk(px, py) {
+  const radius = Number(brushSize.value) / 2;
+  const color = rainbowToggle.checked ? rainbowColor() : packedColor(colorPicker.value);
+  const left = Math.max(0, Math.floor((px - radius) / cellSize));
+  const right = Math.min(world.cols - 1, Math.ceil((px + radius) / cellSize));
+  const top = Math.max(0, Math.floor((py - radius) / cellSize));
+  const bottom = Math.min(world.rows - 1, Math.ceil((py + radius) / cellSize));
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
+      if (Math.hypot((x + 0.5) * cellSize - px, (y + 0.5) * cellSize - py) > Math.max(radius, cellSize)) continue;
+      if (tool === "sand") { if (Math.random() * 100 < Number(flowRate.value)) world.pour(x, y, color); }
+      else world.set(x, y, tool === "wall" ? 2 : 0, color);
     }
   }
 }
-
-function paintRibbon() {
-  if (!pointer.active) {
-    return;
-  }
-
-  const dx = pointer.x - pointer.prevX;
-  const dy = pointer.y - pointer.prevY;
-  const distance = Math.hypot(dx, dy);
-
-  if (distance < 0.8) {
-    pointer.stillness += 1;
-    if (pointer.stillness % 5 === 0) {
-      spawnBurst(pointer.x, pointer.y, 0, 0, 20);
-    }
-    return;
-  }
-
-  pointer.stillness = 0;
-
-  const steps = Math.max(1, Math.ceil(distance / 10));
-  for (let step = 0; step <= steps; step += 1) {
-    const t = step / steps;
-    const px = pointer.prevX + dx * t;
-    const py = pointer.prevY + dy * t;
-    spawnBurst(px, py, dx, dy, distance);
-  }
-
-  pointer.prevX = pointer.x;
-  pointer.prevY = pointer.y;
+function paintSegment(from, to) {
+  const distance = Math.hypot(to.x - from.x, to.y - from.y);
+  const steps = Math.max(1, Math.ceil(distance / Math.max(cellSize, Number(brushSize.value) / 4)));
+  for (let i = 1; i <= steps; i++) paintDisk(from.x + (to.x - from.x) * i / steps, from.y + (to.y - from.y) * i / steps);
 }
-
-function updateParticles(deltaFactor) {
-  for (let i = particles.length - 1; i >= 0; i -= 1) {
-    const particle = particles[i];
-    particle.prevX = particle.x;
-    particle.prevY = particle.y;
-
-    particle.vx *= 0.992;
-    particle.vy += 0.09 * deltaFactor;
-    particle.x += particle.vx * deltaFactor;
-    particle.y += particle.vy * deltaFactor;
-    if (particle.y > height * 0.72) {
-      particle.life -= 0.45 * deltaFactor;
-    } else {
-      particle.life -= 0.12 * deltaFactor;
-    }
-
-    if (particle.x < 0 || particle.x > width) {
-      particle.vx *= -0.68;
-      particle.x = clamp(particle.x, 0, width);
-    }
-
-    const column = clamp(Math.floor(particle.x / pileStep), 0, pileHeights.length - 1);
-    const floorY = pileHeights[column];
-
-    if (particle.y + particle.radius >= floorY) {
-      addPile(particle.x, particle.radius, particle.color);
-      particles.splice(i, 1);
-      continue;
-    }
-
-    if (particle.life <= 0 || particle.y > height + 30) {
-      particles.splice(i, 1);
-    }
-  }
+function refreshLabels() {
+  document.getElementById("brush-value").textContent = `${brushSize.value} px`;
+  document.getElementById("flow-value").textContent = `${flowRate.value}%`;
+  document.getElementById("current-color").textContent = rainbowToggle.checked ? "彩虹" : colorPicker.value.toUpperCase();
+  document.getElementById("tool-status").textContent = `${{sand: "落沙", wall: "固定画笔", erase: "橡皮擦"}[tool]} · ${cellSize} px${paused ? " · 已暂停" : ""}`;
+  document.querySelectorAll("[data-tool]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.tool === tool)));
+  document.querySelectorAll("[data-color]").forEach(button => button.setAttribute("aria-pressed", String(!rainbowToggle.checked && button.dataset.color === colorPicker.value)));
 }
-
-function drawParticles() {
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  for (let i = 0; i < particles.length; i += 1) {
-    const particle = particles[i];
-    const alpha = Math.max(0.12, particle.life / 100);
-
-    ctx.globalAlpha = alpha * 0.55;
-    ctx.strokeStyle = particle.color;
-    ctx.lineWidth = Math.max(1, particle.radius * 0.85);
-    ctx.beginPath();
-    ctx.moveTo(particle.prevX, particle.prevY);
-    ctx.lineTo(particle.x, particle.y);
-    ctx.stroke();
-
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = particle.color;
-    ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.globalAlpha = 1;
+function togglePanel(show) {
+  panel.hidden = !show;
+  panelToggle.setAttribute("aria-expanded", String(show));
+  panelToggle.textContent = show ? (window.innerWidth <= 600 ? "收起" : "收起工具") : (window.innerWidth <= 600 ? "工具" : "展开工具");
 }
-
-function updateStats(frameTime) {
-  grainCountEl.textContent = `活跃粒子 ${particles.length}`;
-  pileCountEl.textContent = `堆积沙粒 ${settledCount}`;
-  fpsCountEl.textContent = frameTime < 18 ? "渲染状态 流畅" : frameTime < 28 ? "渲染状态 正常" : "渲染状态 繁忙";
+function stopDrawing(event) {
+  if (!pointer || (event?.pointerId !== undefined && pointer.id !== event.pointerId)) return;
+  pointer = null;
 }
-
-function animate(timestamp) {
-  requestAnimationFrame(animate);
-
-  if (!lastTimestamp) {
-    lastTimestamp = timestamp;
-  }
-
-  const frameTime = timestamp - lastTimestamp;
-  const deltaFactor = clamp(frameTime / 16.67, 0.75, 1.8);
-  lastTimestamp = timestamp;
-
-  hueSeed = (hueSeed + 0.65) % 360;
-  pointer.hue = hueSeed;
-
-  if (pointer.active) {
-    paintRibbon();
-  }
-
-  updateParticles(deltaFactor);
-
-  ctx.clearRect(0, 0, width, height);
-  ctx.drawImage(backgroundCanvas, 0, 0, width, height);
-  ctx.drawImage(settledCanvas, 0, 0, width, height);
-  drawParticles();
-  updateStats(frameTime);
-}
-
-function setPointerPosition(clientX, clientY) {
-  pointer.x = clientX;
-  pointer.y = clientY;
-}
-
-function pointerDown(clientX, clientY) {
-  pointer.active = true;
-  pointer.prevX = clientX;
-  pointer.prevY = clientY;
-  pointer.stillness = 0;
-  setPointerPosition(clientX, clientY);
-  spawnBurst(clientX, clientY, 0, 0, 34);
-}
-
-function pointerMove(clientX, clientY) {
-  if (!pointer.active) {
-    pointer.prevX = clientX;
-    pointer.prevY = clientY;
-  }
-  setPointerPosition(clientX, clientY);
-}
-
-colorPicker.addEventListener("input", (event) => {
-  updateBrushFromHex(event.target.value);
-  updateColorLabel();
-});
-
-rainbowToggle.addEventListener("change", (event) => {
-  brush.rainbow = event.target.checked;
-  updateColorLabel();
-});
-
-window.addEventListener("resize", resize);
-
-canvas.addEventListener("pointerdown", (event) => {
-  if (event.pointerType === "mouse" && event.button !== 0) {
-    return;
-  }
+canvas.addEventListener("pointerdown", event => {
+  if (pointer || (event.pointerType === "mouse" && event.button !== 0)) return;
+  remember();
+  status.textContent = "";
   canvas.setPointerCapture(event.pointerId);
-  pointerDown(event.clientX, event.clientY);
+  pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  paintDisk(pointer.x, pointer.y);
 });
-
-canvas.addEventListener("pointermove", (event) => {
-  pointerMove(event.clientX, event.clientY);
-});
-
-canvas.addEventListener("pointerup", () => {
-  pointer.active = false;
-  pointer.stillness = 0;
-});
-
-canvas.addEventListener("pointercancel", () => {
-  pointer.active = false;
-  pointer.stillness = 0;
-});
-
-canvas.addEventListener("pointerleave", () => {
-  if (!pointer.active) {
-    return;
+canvas.addEventListener("pointermove", event => {
+  if (!pointer || pointer.id !== event.pointerId) return;
+  const samples = event.getCoalescedEvents?.() || [event];
+  for (const sample of samples.length ? samples : [event]) {
+    const next = { x: sample.clientX, y: sample.clientY };
+    paintSegment(pointer, next);
+    pointer.x = next.x; pointer.y = next.y;
   }
-  pointer.active = false;
-  pointer.stillness = 0;
 });
-
+canvas.addEventListener("pointerup", stopDrawing);
+canvas.addEventListener("pointercancel", stopDrawing);
+canvas.addEventListener("lostpointercapture", stopDrawing);
+window.addEventListener("blur", () => { pointer = null; });
+panelToggle.addEventListener("click", () => togglePanel(panel.hidden));
+document.getElementById("close-tools").addEventListener("click", () => togglePanel(false));
+pauseButton.addEventListener("click", () => {
+  paused = !paused;
+  pauseButton.textContent = paused ? "继续流动" : "暂停流动";
+  pauseButton.setAttribute("aria-pressed", String(paused));
+  refreshLabels();
+});
+document.querySelectorAll("[data-tool]").forEach(button => button.addEventListener("click", () => { tool = button.dataset.tool; refreshLabels(); }));
+document.querySelectorAll("[data-color]").forEach(button => button.addEventListener("click", () => { colorPicker.value = button.dataset.color; rainbowToggle.checked = false; refreshLabels(); }));
+[rainbowToggle, brushSize, flowRate].forEach(input => input.addEventListener("input", refreshLabels));
+colorPicker.addEventListener("input", () => { rainbowToggle.checked = false; refreshLabels(); });
+grainSize.addEventListener("change", () => { remember(); resize(); status.textContent = "砂粒大小已调整，作品保留"; });
+background.addEventListener("change", () => { world.dirty = true; draw(); });
+undoButton.addEventListener("click", () => {
+  if (!history.length) return;
+  pointer = null;
+  world.restore(history.pop());
+  undoButton.disabled = history.length === 0;
+  status.textContent = "已撤销上一步";
+  draw();
+});
+document.getElementById("clear-button").addEventListener("click", () => {
+  if (!world.sandCount && !world.wallCount) return;
+  remember(); pointer = null; world.clear(); draw(); status.textContent = "画布已清空，可撤销";
+});
+document.getElementById("export-button").addEventListener("click", () => {
+  draw();
+  canvas.toBlob(blob => {
+    if (!blob) { status.textContent = "图片生成失败，请重试"; return; }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "MOYU-彩砂作品.png";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = "作品已导出";
+  }, "image/png");
+});
+window.addEventListener("resize", resize);
+function animate(time) {
+  const elapsed = previousTime ? Math.min(50, time - previousTime) : 16.67;
+  previousTime = time;
+  accumulator += elapsed;
+  while (accumulator >= 16.67) {
+    accumulator -= 16.67;
+    hue = (hue + 0.7) % 360;
+    if (pointer && tool === "sand") paintDisk(pointer.x, pointer.y);
+    if (!paused) for (let step = 0; step < Math.max(1, Math.round(Number(gravitySpeed.value) * 2 / cellSize)); step++) world.step();
+  }
+  draw();
+  if (time - lastStats > 250) {
+    document.getElementById("grain-count").textContent = `砂粒 ${world.sandCount.toLocaleString()}${world.wallCount ? ` · 固定笔迹 ${world.wallCount.toLocaleString()}` : ""}`;
+    lastStats = time;
+  }
+  requestAnimationFrame(animate);
+}
 resize();
-updateBrushFromHex(colorPicker.value);
-updateColorLabel();
-animate(0);
+togglePanel(window.innerWidth > 600);
+requestAnimationFrame(animate);
