@@ -10,7 +10,7 @@ window.MOYU_CATALOG = {
       category: "games",
       title: "火柴人爬塔英雄",
       symbol: "⚑",
-      description: "24 关爬塔，选路线、吞数值、拿钥匙、躲陷阱，挑战塔顶 Boss。",
+      description: "6 个阶段、24 张独立塔图，规划岔路、钥匙与机关，在不同路线中挑战塔顶 Boss。",
       path: "games/stick-tower-hero/",
       tags: ["益智", "闯关"],
       featured: true,

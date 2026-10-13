@@ -1,6 +1,7 @@
 (function () {
   const LEVELS = window.STICK_TOWER_LEVELS || [];
-  const STORAGE_KEY = "moyu-stick-tower-progress-v1";
+  const STORAGE_KEY = "moyu-stick-tower-progress-v2";
+  const LEGACY_STORAGE_KEY = "moyu-stick-tower-progress-v1";
   const MESSAGE_COLORS = {
     info: "#16304f",
     good: "#1f7b4f",
@@ -13,6 +14,8 @@
 
   const ui = {
     levelName: document.getElementById("level-name"),
+    chapterName: document.getElementById("chapter-name"),
+    levelPicker: document.getElementById("level-picker"),
     levelIndexLabel: document.getElementById("level-index-label"),
     powerValue: document.getElementById("power-value"),
     keyValue: document.getElementById("key-value"),
@@ -49,6 +52,18 @@
   }
   if (window.matchMedia("(max-width: 700px)").matches) document.querySelector(".guide").open = false;
   let modalReturnFocus = null;
+  let chapterGroup = null;
+  for (const [index, level] of LEVELS.entries()) {
+    if (!chapterGroup || chapterGroup.label !== level.chapter) {
+      chapterGroup = document.createElement("optgroup");
+      chapterGroup.label = level.chapter;
+      ui.levelPicker.append(chapterGroup);
+    }
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${index + 1}. ${level.shortName}`;
+    chapterGroup.append(option);
+  }
 
   const state = {
     progress: loadProgress(),
@@ -129,6 +144,11 @@
   function loadProgress() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
+      const legacyRaw = raw ? null : window.localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (!raw && legacyRaw) {
+        const legacy = JSON.parse(legacyRaw);
+        return { unlocked: clamp(Number(legacy.unlocked) || 0, 0, LEVELS.length - 1), bestTimes: {}, bestScores: {} };
+      }
       if (!raw) {
         return {
           unlocked: 0,
@@ -153,7 +173,9 @@
   }
 
   function saveProgress() {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+    } catch { /* Progress remains playable in this session when storage is unavailable. */ }
   }
 
   function cloneLevel(level) {
@@ -161,6 +183,7 @@
       id: level.id,
       name: level.name,
       shortName: level.shortName,
+      chapter: level.chapter,
       playerPower: level.playerPower,
       playerStart: level.playerStart,
       winRoom: level.winRoom,
@@ -258,6 +281,9 @@
     const canGoNext = state.levelIndex < Math.min(state.progress.unlocked, LEVELS.length - 1);
 
     ui.levelName.textContent = state.level.name;
+    ui.chapterName.textContent = state.level.chapter;
+    ui.levelPicker.value = String(state.levelIndex);
+    for (const option of ui.levelPicker.options) option.disabled = Number(option.value) > state.progress.unlocked;
     ui.levelIndexLabel.textContent = `第 ${state.levelIndex + 1} / ${LEVELS.length} 关`;
     ui.powerValue.textContent = String(state.player.power);
     ui.keyValue.textContent = String(state.player.keys);
@@ -716,8 +742,8 @@
     showModal({
       title: allCleared ? "全部通关" : "通关成功",
       text: hasRecordUpdate
-        ? `这次发挥不错，记录已经刷新。${allCleared ? "五座塔楼都被你端了。" : "现在可以继续挑战更高一层。"}`
-        : `${allCleared ? "五座塔楼都被你端了。" : "这关已经拿下，继续往上爬。"} `,
+        ? `这次发挥不错，记录已经刷新。${allCleared ? "六个阶段全部完成。" : "现在可以继续挑战更高一层。"}`
+        : `${allCleared ? "六个阶段全部完成。" : "这关已经拿下，继续往上爬。"} `,
       primaryText: allCleared ? "返回摸鱼指挥部" : "下一关",
       secondaryText: "重玩本关",
       primaryAction: () => {
@@ -1206,7 +1232,7 @@
     ctx.font = "600 10px 'Segoe UI', 'PingFang SC', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(isCurrent ? "你的位置" : roomTitle(room), 0, -rect.height / 2 + 13);
+    ctx.fillText(isCurrent ? "你的位置" : isHinted ? "下一步" : roomTitle(room), 0, -rect.height / 2 + 13);
     ctx.restore();
 
     const contentScale = Math.min(rect.width / 92, rect.height / 104);
@@ -1230,7 +1256,6 @@
         }
     }
     ctx.restore();
-    if (isHinted) drawBadge(center.x, rect.y - 12, "下一步", "#f5e8c6", "#9a732e");
   }
 
   function roomTitle(room) {
@@ -1388,6 +1413,11 @@
       }
     }
   }
+
+  ui.levelPicker.addEventListener("change", () => {
+    const index = Number(ui.levelPicker.value);
+    if (Number.isInteger(index) && index >= 0 && index <= state.progress.unlocked) loadLevel(index);
+  });
 
   ui.prevLevel.addEventListener("click", () => {
     hideModal();

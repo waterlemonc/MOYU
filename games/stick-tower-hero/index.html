@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>火柴人爬塔英雄 | MOYU</title>
-    <link rel="stylesheet" href="style.css?v=20261013-2" />
+    <link rel="stylesheet" href="style.css?v=20261013-campaign2" />
   </head>
   <body>
     <main class="app">
@@ -13,12 +13,12 @@
         <nav aria-label="返回导航"><a href="../">← 小游戏仓</a><a href="../../">首页 ↗</a></nav>
       </header>
       <section class="game-intro" aria-labelledby="game-title">
-        <div><p class="eyebrow">STRATEGY / TOWER ADVENTURE</p><h1 id="game-title">火柴人爬塔英雄<span class="title-badge">24 关挑战</span></h1></div>
+        <div><p class="eyebrow">STRATEGY / TOWER ADVENTURE</p><h1 id="game-title">火柴人爬塔英雄<span class="title-badge">6 阶段 · 24 关</span></h1></div>
         <p>每一步都算数。选条好路线，一路打到塔顶。</p>
       </section>
       <div class="game-layout">
         <section class="game-shell" aria-label="塔楼与关卡操作">
-          <div class="arena-heading"><div><span class="eyebrow" id="level-index-label">第 1 / 24 关</span><h2 id="level-name">正在准备塔楼</h2></div><span class="arena-chip"><i></i> 点击房间移动</span></div>
+          <div class="arena-heading"><div><div class="level-caption"><span class="eyebrow" id="level-index-label">第 1 / 24 关</span><span id="chapter-name" class="chapter-label"></span></div><h2 id="level-name">正在准备塔楼</h2></div><label class="level-picker-label" for="level-picker"><span>选关</span><select id="level-picker" aria-label="选择已解锁关卡"></select></label></div>
           <div class="mobile-stats" aria-label="实时状态"></div>
           <div class="canvas-frame"><canvas id="game-canvas" width="640" height="540" aria-label="火柴人爬塔游戏画布：点击相邻房间前进"></canvas></div>
           <div class="arena-footer"><span><i class="legend-dot blue"></i> 你的位置</span><span><i class="legend-dot green"></i> 可前往</span><span><i class="legend-dot gray"></i> 已走过</span><span class="footer-note">走过的房间不能回头</span></div>
@@ -43,7 +43,7 @@
           <section class="status-bar panel" aria-live="polite"><p class="eyebrow">下一步怎么走</p><p id="status-message">正在读取塔楼布局……</p></section>
           <details class="guide panel" open>
             <summary>爬塔小指南 <span aria-hidden="true">＋</span></summary>
-            <div class="guide-content"><p class="guide-lead">从下往上爬，先壮大自己，再挑战 Boss。</p><ul><li><span class="rule-icon enemy">⚔</span><div><strong>敌人 & Boss</strong><p>你的战力必须严格大于敌人。</p></div></li><li><span class="rule-icon treasure">＋</span><div><strong>宝箱 & 钥匙</strong><p>宝箱增加战力；钥匙用来开锁门。</p></div></li><li><span class="rule-icon trap">!</span><div><strong>陷阱 & 路线</strong><p>陷阱扣战力，走过的房间不能回头。</p></div></li></ul><p class="guide-tip">卡住了？点「路线提示」看看下一步。</p></div>
+            <div class="guide-content"><p class="guide-lead">从下往上爬，先壮大自己，再挑战 Boss。</p><ul><li><span class="rule-icon enemy">⚔</span><div><strong>敌人 & Boss</strong><p>你的战力必须严格大于敌人。</p></div></li><li><span class="rule-icon treasure">＋</span><div><strong>宝箱 & 钥匙</strong><p>宝箱增加战力；锁门消耗标示数量的钥匙。</p></div></li><li><span class="rule-icon trap">!</span><div><strong>陷阱 & 路线</strong><p>陷阱扣战力；先看出口，走过的房间不能回头。</p></div></li></ul><p class="guide-tip">卡住了？点「路线提示」看看下一步。</p></div>
           </details>
         </aside>
       </div>
@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    <script src="levels.js"></script>
-    <script src="main.js?v=20261013-2"></script>
+    <script src="levels.js?v=20261013-campaign2"></script>
+    <script src="main.js?v=20261013-campaign2"></script>
   </body>
 </html>

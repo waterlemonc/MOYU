@@ -75,3 +75,13 @@ GitHub 仓库 Settings → Pages → Build and deployment 选择 GitHub Actions�
 推送到 `main` 后，Actions 先检查资源配置、HTML 本地链接、麻将动态图片路径及 JS 语法，通过后直接部署仓库静态文件。也可以手动触发工作流。检查不替代浏览器中的视觉及玩法验证。
 
 线上地址：https://waterlemonc.github.io/MOYU/
+
+## 火柴人爬塔关卡扩展
+
+`games/stick-tower-hero/levels.js` 中的 `campaign` 是从底层到顶层的手工关卡定义。每间房通过 `R(label, x, item, from)` 指定唯一标签、横坐标、道具和连接来源（多个标签用空格分隔）。连接可跨层或横向；游戏允许沿连接移动，但禁止再次进入已走过的房间。`finish` 指定哪些房间连接 Boss。
+
+24 关分为六个阶段，每关独立配置楼层、连线与道具。`K(2)` 提供两把钥匙，`L(2)` 消耗两把钥匙；后期组合机关、岔路和有明确出口的侧路。房间总数必须少于 31，以兼容游戏求解器的位掩码。
+
+修改后运行 `node scripts/check-tower-levels.mjs`：检查房间与连线、布局重复、可通关性，以及双钥匙门是否存在可用的获胜路线。发布流程同时执行此检查。浏览器仍需验证绘制与实际点击。
+
+新版关卡使用 `moyu-stick-tower-progress-v2` 保存进度。首次读取旧存档时保留已解锁关卡，旧地图的最佳时间与分数不迁入新地图。
