@@ -4,83 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>火柴人爬塔英雄 | MOYU</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=20261013-2" />
   </head>
   <body>
-    <div class="page-glow" aria-hidden="true"></div>
-
     <main class="app">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">MOYU TOWER</p>
-          <h1>火柴人爬塔英雄</h1>
-          <p class="hero-copy">
-            选择相邻房间一路爬塔，吞掉更弱的敌人、攒战力、拿钥匙、躲陷阱，24 关一路打上去。
-            走过的格子不能回头，所以每一步都得算清。
-          </p>
-        </div>
-
-        <div class="hero-actions">
-          <a class="nav-link nav-link-soft" href="../index.html">返回小游戏仓</a>
-          <a class="nav-link" href="../../index.html">返回摸鱼指挥部</a>
-        </div>
+      <header class="site-header">
+        <a class="brand" href="../../"><span class="brand-mark" aria-hidden="true">M</span> MOYU <span>游戏实验室</span></a>
+        <nav aria-label="返回导航"><a href="../">← 小游戏仓</a><a href="../../">首页 ↗</a></nav>
       </header>
-
-      <section class="hud" aria-label="游戏状态">
-        <article class="hud-card">
-          <span>当前关卡</span>
-          <strong id="level-name">--</strong>
-          <small id="level-index-label">第 -- / -- 关</small>
-        </article>
-        <article class="hud-card">
-          <span>当前战力</span>
-          <strong id="power-value">0</strong>
-          <small>必须严格大于目标战力</small>
-        </article>
-        <article class="hud-card">
-          <span>钥匙数量</span>
-          <strong id="key-value">0</strong>
-          <small>锁门会消耗 1 把钥匙</small>
-        </article>
-        <article class="hud-card">
-          <span>当前分数</span>
-          <strong id="score-value">0</strong>
-          <small>战力越高，分数越高</small>
-        </article>
-        <article class="hud-card">
-          <span>本局用时</span>
-          <strong id="time-value">00:00</strong>
-          <small>通关后会记录最佳时间</small>
-        </article>
-        <article class="hud-card">
-          <span>最佳记录</span>
-          <strong id="best-value">未通关</strong>
-          <small id="unlock-value">已解锁 1 / 24 关</small>
-        </article>
+      <section class="game-intro" aria-labelledby="game-title">
+        <div><p class="eyebrow">STRATEGY / TOWER ADVENTURE</p><h1 id="game-title">火柴人爬塔英雄<span class="title-badge">24 关挑战</span></h1></div>
+        <p>每一步都算数。选条好路线，一路打到塔顶。</p>
       </section>
-
-      <section class="game-shell">
-        <div class="canvas-frame">
-          <canvas id="game-canvas" width="432" height="768" aria-label="火柴人爬塔游戏画布"></canvas>
-          <div class="canvas-overlay" aria-hidden="true">
-            <div class="corner-note">点击相邻房间，走过后不能回头</div>
+      <div class="game-layout">
+        <section class="game-shell" aria-label="塔楼与关卡操作">
+          <div class="arena-heading"><div><span class="eyebrow" id="level-index-label">第 1 / 24 关</span><h2 id="level-name">正在准备塔楼</h2></div><span class="arena-chip"><i></i> 点击房间移动</span></div>
+          <div class="mobile-stats" aria-label="实时状态"></div>
+          <div class="canvas-frame"><canvas id="game-canvas" width="640" height="540" aria-label="火柴人爬塔游戏画布：点击相邻房间前进"></canvas></div>
+          <div class="arena-footer"><span><i class="legend-dot blue"></i> 你的位置</span><span><i class="legend-dot green"></i> 可前往</span><span><i class="legend-dot gray"></i> 已走过</span><span class="footer-note">走过的房间不能回头</span></div>
+          <div class="controls" aria-label="关卡操作">
+            <button class="control-button secondary" id="prev-level" type="button">← 上一关</button>
+            <button class="control-button secondary" id="restart-level" type="button">↻ 重来</button>
+            <button class="control-button hint" id="hint-level" type="button">✦ 路线提示</button>
+            <button class="control-button primary" id="next-level" type="button">下一关 →</button>
           </div>
-        </div>
-
-        <div class="status-bar" aria-live="polite">
-          <p class="status-title">指挥提示</p>
-          <p id="status-message">正在读取塔楼布局……</p>
-        </div>
-      </section>
-
-      <section class="controls" aria-label="关卡操作">
-        <button class="control-button secondary" id="prev-level" type="button">上一关</button>
-        <button class="control-button secondary" id="restart-level" type="button">重新开始</button>
-        <button class="control-button secondary" id="hint-level" type="button">提示路线</button>
-        <button class="control-button primary" id="next-level" type="button">下一关</button>
-      </section>
+        </section>
+        <aside class="sidebar" aria-label="冒险状态与说明">
+          <section class="hud panel" aria-label="游戏状态">
+            <div class="panel-heading"><h2>冒险状态</h2><span class="live-label"><i></i> LIVE</span></div>
+            <div class="core-stats">
+              <article class="stat power-stat"><span>当前战力</span><strong id="power-value">10</strong><small>击败敌人，战力相加</small></article>
+              <article class="stat key-stat"><span>钥匙</span><strong id="key-value">0</strong><small>打开锁门</small></article>
+            </div>
+            <div class="record-grid"><article><span>当前分数</span><strong id="score-value">100</strong></article><article><span>本局用时</span><strong id="time-value">00:00</strong></article></div>
+            <div class="best-record"><span>本关最佳</span><strong id="best-value">未通关</strong></div>
+            <div class="campaign-progress"><span id="unlock-value">已解锁 1 / 24 关</span><div class="progress-track"><div id="progress-fill"></div></div></div>
+          </section>
+          <section class="status-bar panel" aria-live="polite"><p class="eyebrow">下一步怎么走</p><p id="status-message">正在读取塔楼布局……</p></section>
+          <details class="guide panel" open>
+            <summary>爬塔小指南 <span aria-hidden="true">＋</span></summary>
+            <div class="guide-content"><p class="guide-lead">从下往上爬，先壮大自己，再挑战 Boss。</p><ul><li><span class="rule-icon enemy">⚔</span><div><strong>敌人 & Boss</strong><p>你的战力必须严格大于敌人。</p></div></li><li><span class="rule-icon treasure">＋</span><div><strong>宝箱 & 钥匙</strong><p>宝箱增加战力；钥匙用来开锁门。</p></div></li><li><span class="rule-icon trap">!</span><div><strong>陷阱 & 路线</strong><p>陷阱扣战力，走过的房间不能回头。</p></div></li></ul><p class="guide-tip">卡住了？点「路线提示」看看下一步。</p></div>
+          </details>
+        </aside>
+      </div>
+      <footer class="page-footer">MOYU TOWER · 先想一步，再向上一步</footer>
     </main>
-
     <div class="modal hidden" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-card">
         <p class="eyebrow">MOYU REPORT</p>
@@ -110,6 +78,6 @@
     </div>
 
     <script src="levels.js"></script>
-    <script src="main.js"></script>
+    <script src="main.js?v=20261013-2"></script>
   </body>
 </html>

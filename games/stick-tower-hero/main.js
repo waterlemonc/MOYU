@@ -35,6 +35,21 @@
     modalSecondary: document.getElementById("modal-secondary")
   };
 
+  const mobileStats = document.querySelector(".mobile-stats");
+  const mobileValues = [];
+  for (const [label, source] of [["战力", ui.powerValue], ["钥匙", ui.keyValue], ["分数", ui.scoreValue], ["用时", ui.timeValue]]) {
+    const stat = document.createElement("div");
+    stat.className = "mobile-stat";
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    const value = document.createElement("strong");
+    stat.append(caption, value);
+    mobileStats.append(stat);
+    mobileValues.push({ source, value });
+  }
+  if (window.matchMedia("(max-width: 700px)").matches) document.querySelector(".guide").open = false;
+  let modalReturnFocus = null;
+
   const state = {
     progress: loadProgress(),
     levelIndex: 0,
@@ -253,6 +268,8 @@
 
     ui.prevLevel.disabled = state.levelIndex === 0;
     ui.nextLevel.disabled = !canGoNext;
+    document.getElementById("progress-fill").style.width = `${unlockedCount / LEVELS.length * 100}%`;
+    for (const { source, value } of mobileValues) value.textContent = source.textContent;
   }
 
   function calculateScore() {
@@ -260,8 +277,13 @@
   }
 
   function resizeCanvas() {
+    if (state.level) {
+      const ys = state.level.rooms.map(room => room.y);
+      const rows = Math.max(...ys) - Math.min(...ys);
+      canvas.style.minHeight = `${rows * 84 + 100}px`;
+    }
     const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     state.canvasWidth = rect.width;
     state.canvasHeight = rect.height;
@@ -287,16 +309,15 @@
     const rawSpanY = maxY - minY;
     const spanX = Math.max(1, rawSpanX);
     const spanY = Math.max(1, rawSpanY);
-    const paddingX = 54;
-    const paddingTop = 72;
-    const paddingBottom = 82;
-    const usableWidth = state.canvasWidth - paddingX * 2;
+    const usableWidth = Math.min(state.canvasWidth - 88, 440);
+    const paddingX = (state.canvasWidth - usableWidth) / 2;
+    const paddingTop = 54;
+    const paddingBottom = 54;
     const usableHeight = state.canvasHeight - paddingTop - paddingBottom;
-    const stepX = spanX === 0 ? 0 : usableWidth / spanX;
-    const stepY = spanY === 0 ? 0 : usableHeight / spanY;
-    const stepBase = Math.min(stepX || 80, stepY || 80);
-    const roomWidth = clamp(stepBase * 0.86, 66, 88);
-    const roomHeight = clamp(roomWidth * 0.92, 60, 80);
+    const stepX = usableWidth / spanX;
+    const stepY = usableHeight / spanY;
+    const roomWidth = clamp(stepX * 0.8, 58, 100);
+    const roomHeight = clamp(stepY * 0.82, 72, 102);
 
     state.layout.roomWidth = roomWidth;
     state.layout.roomHeight = roomHeight;
@@ -717,6 +738,7 @@
   }
 
   function showModal(options) {
+    modalReturnFocus = document.activeElement;
     ui.resultModal.classList.remove("hidden");
     ui.modalTitle.textContent = options.title;
     ui.modalText.textContent = options.text;
@@ -727,10 +749,13 @@
     ui.modalBest.textContent = formatBestRecord(String(state.level.id));
     state.modalActions.primary = options.primaryAction || null;
     state.modalActions.secondary = options.secondaryAction || null;
+    ui.modalPrimary.focus();
   }
 
   function hideModal() {
+    const wasOpen = !ui.resultModal.classList.contains("hidden");
     ui.resultModal.classList.add("hidden");
+    if (wasOpen && modalReturnFocus) modalReturnFocus.focus();
     state.modalActions.primary = null;
     state.modalActions.secondary = null;
   }
@@ -973,7 +998,7 @@
 
   function drawBadge(x, y, text, fillStyle, textStyle) {
     ctx.save();
-    ctx.font = "bold 12px 'Trebuchet MS', 'PingFang SC', sans-serif";
+    ctx.font = "bold 14px 'Trebuchet MS', 'PingFang SC', sans-serif";
     const width = Math.max(32, ctx.measureText(text).width + 16);
     const height = 22;
     roundedRectPath(ctx, x - width / 2, y - height / 2, width, height, 11);
@@ -1032,7 +1057,7 @@
 
     drawBadge(
       x,
-      y - 46 * scale,
+      y + 39 * scale,
       String(value),
       options.player ? "#dce8ff" : options.boss ? "#f7dbdb" : "#ffe5e2",
       options.player ? "#163eae" : options.boss ? "#821c1d" : "#b73830"
@@ -1061,7 +1086,7 @@
     ctx.lineTo(x, y + 16);
     ctx.stroke();
 
-    drawBadge(x, y - 24, `+${value}`, "#fff0c9", "#9b5c00");
+    drawBadge(x, y + 28, `+${value}`, "#fff0c9", "#9b5c00");
     ctx.restore();
   }
 
@@ -1082,7 +1107,7 @@
     ctx.lineTo(x + 12, y + 7);
     ctx.stroke();
 
-    drawBadge(x, y - 24, `+${value}`, "#dff7ea", "#187848");
+    drawBadge(x, y + 28, `+${value}`, "#dff7ea", "#187848");
     ctx.restore();
   }
 
@@ -1105,7 +1130,7 @@
     ctx.arc(x, y + 8, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    drawBadge(x, y - 30, `钥匙 ${cost}`, "#fff2d6", "#8a5b11");
+    drawBadge(x, y + 32, `钥匙 ${cost}`, "#fff2d6", "#8a5b11");
     ctx.restore();
   }
 
@@ -1122,7 +1147,7 @@
       ctx.fill();
     }
 
-    drawBadge(x, y - 24, `-${value}`, "#edf1f5", "#556171");
+    drawBadge(x, y + 28, `-${value}`, "#edf1f5", "#556171");
     ctx.restore();
   }
 
@@ -1155,90 +1180,57 @@
     const isHovered = state.hoverRoomId === room.id;
     const isInvalid = state.invalidRoomId === room.id && state.invalidUntil > now;
     const isHinted = state.hintRoomId === room.id && state.hintUntil > now;
-    const effect = getEffectForRoom(room.id, now);
-    const pulse = effect ? Math.sin(((now - effect.startedAt) / effect.duration) * Math.PI) : 0;
-    const scale = 1 + pulse * 0.03;
     const accent = getRoomAccent(room, isVisited);
-
     ctx.save();
     ctx.translate(center.x, center.y);
-    ctx.scale(scale, scale);
-
-    if (isReachable || isCurrent || isHinted || isInvalid) {
-      roundedRectPath(ctx, -rect.width / 2 - 6, -rect.height / 2 - 6, rect.width + 12, rect.height + 12, 22);
-      ctx.fillStyle = isInvalid
-        ? "#ffd8d8"
-        : isHinted
-          ? "#fff3c5"
-          : isCurrent
-            ? "#dbe7ff"
-            : "#e3f6ea";
+    if (isCurrent || isHinted || isReachable || isInvalid) {
+      roundedRectPath(ctx, -rect.width / 2 - 4, -rect.height / 2 - 4, rect.width + 8, rect.height + 8, 17);
+      ctx.fillStyle = isInvalid ? "#f5dedb" : isHinted ? "#f5e8c6" : isCurrent ? "#e1eafa" : "#e6efdf";
       ctx.fill();
     }
-
-    roundedRectPath(ctx, -rect.width / 2, -rect.height / 2, rect.width, rect.height, 18);
-    ctx.fillStyle = isVisited ? "#f1f3f7" : "#fffefb";
+    ctx.shadowColor = "rgba(40, 60, 45, 0.06)";
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    roundedRectPath(ctx, -rect.width / 2, -rect.height / 2, rect.width, rect.height, 13);
+    ctx.fillStyle = isVisited ? "#f0f2ed" : "#ffffff";
     ctx.fill();
-    ctx.lineWidth = isHovered ? 4 : 3;
-    ctx.strokeStyle = isInvalid ? "#cb4547" : isHinted ? "#d6931d" : isCurrent ? "#2f67ff" : isVisited ? "#9ca7b7" : "#18253d";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.lineWidth = isCurrent || isHinted || isHovered ? 2 : 1.2;
+    ctx.strokeStyle = isInvalid ? "#bc6b63" : isHinted ? "#c9a253" : isCurrent ? "#4775d1" : isReachable ? "#86ae77" : "#d7dfd1";
     ctx.stroke();
-
-    roundedRectPath(ctx, -rect.width / 2, -rect.height / 2, rect.width, 18, 18);
-    ctx.fillStyle = accent;
+    roundedRectPath(ctx, -rect.width / 2 + 5, -rect.height / 2 + 5, rect.width - 10, 15, 5);
+    ctx.fillStyle = isCurrent ? "#eaf0fc" : accent;
     ctx.fill();
-
-    ctx.fillStyle = "#1a2c47";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.font = "bold 11px 'Trebuchet MS', 'PingFang SC', sans-serif";
-    ctx.fillText(roomTitle(room), -rect.width / 2 + 10, -rect.height / 2 + 4);
-
+    ctx.fillStyle = isVisited ? "#899386" : "#52614f";
+    ctx.font = "600 10px 'Segoe UI', 'PingFang SC', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(isCurrent ? "你的位置" : roomTitle(room), 0, -rect.height / 2 + 13);
     ctx.restore();
 
+    const contentScale = Math.min(rect.width / 92, rect.height / 104);
+    ctx.save();
+    ctx.translate(center.x, center.y + 5);
+    ctx.scale(contentScale, contentScale);
     switch (room.type) {
-      case "enemy":
-        drawStickman(center.x, center.y + 8, "#d84f47", room.value, { scale: 0.78 });
-        break;
-      case "boss":
-        drawStickman(center.x, center.y + 10, "#972f31", room.value, { scale: 0.92, boss: true });
-        break;
-      case "treasure":
-        drawTreasure(center.x, center.y + 12, room.value);
-        break;
-      case "key":
-        drawKey(center.x, center.y + 8, room.value || 1);
-        break;
-      case "lock":
-        drawLock(center.x, center.y + 10, room.value || 1);
-        break;
-      case "trap":
-        drawTrap(center.x, center.y + 6, room.value);
-        break;
-      case "start":
-        drawStartMarker(center.x, center.y + 8);
-        break;
+      case "enemy": drawStickman(0, 0, "#c66b61", room.value, { scale: 0.78 }); break;
+      case "boss": drawStickman(0, 4, "#a54c49", room.value, { scale: 0.82, boss: true }); break;
+      case "treasure": drawTreasure(0, 0, room.value); break;
+      case "key": drawKey(0, 0, room.value || 1); break;
+      case "lock": drawLock(0, 0, room.value || 1); break;
+      case "trap": drawTrap(0, 0, room.value); break;
+      case "start": if (!isCurrent) drawStartMarker(0, 0); break;
       default:
-        if (room.baseType !== "empty" && room.baseType !== "start") {
-          ctx.save();
-          ctx.fillStyle = "#7b889a";
-          ctx.font = "12px 'Trebuchet MS', 'PingFang SC', sans-serif";
+        if (!isCurrent) {
+          ctx.fillStyle = "#a0aa9a";
+          ctx.font = "12px 'Segoe UI', 'PingFang SC', sans-serif";
           ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(isVisited ? "已走过" : "已清空", center.x, center.y + 8);
-          ctx.restore();
+          ctx.fillText(isVisited ? "已走过" : "已清空", 0, 4);
         }
-        break;
     }
-
-    if (isHinted) {
-      ctx.save();
-      ctx.fillStyle = "#d6931d";
-      ctx.font = "bold 12px 'Trebuchet MS', 'PingFang SC', sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText("下一步", center.x, rect.y - 14);
-      ctx.restore();
-    }
+    ctx.restore();
+    if (isHinted) drawBadge(center.x, rect.y - 12, "下一步", "#f5e8c6", "#9a732e");
   }
 
   function roomTitle(room) {
@@ -1290,43 +1282,18 @@
   function drawLinks() {
     ctx.save();
     ctx.lineCap = "round";
-
     for (const [leftId, rightId] of state.level.links) {
       const left = getRoomCenter(leftId);
       const right = getRoomCenter(rightId);
-      if (!left || !right) {
-        continue;
-      }
-
+      const currentLink = leftId === state.player.roomId || rightId === state.player.roomId;
+      const visitedLink = hasVisitedRoom(leftId) && hasVisitedRoom(rightId);
       ctx.beginPath();
-      ctx.strokeStyle = "#111a2b";
-      ctx.lineWidth = 12;
-      ctx.moveTo(left.x, left.y);
-      ctx.lineTo(right.x, right.y);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.strokeStyle = "#f7f5ef";
-      ctx.lineWidth = 5;
+      ctx.strokeStyle = visitedLink ? "#e6ebe1" : currentLink ? "#a2baa0" : "#d9e1d2";
+      ctx.lineWidth = currentLink ? 3 : 2;
       ctx.moveTo(left.x, left.y);
       ctx.lineTo(right.x, right.y);
       ctx.stroke();
     }
-
-    ctx.restore();
-  }
-
-  function drawTowerHeader() {
-    ctx.save();
-    ctx.fillStyle = "#142845";
-    ctx.font = "bold 22px 'Trebuchet MS', 'PingFang SC', sans-serif";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillText(state.level.shortName, 24, 22);
-
-    ctx.font = "13px 'Trebuchet MS', 'PingFang SC', sans-serif";
-    ctx.fillStyle = "#607289";
-    ctx.fillText("蓝色是你，红色是敌人，走过的格子不能回头。", 24, 50);
     ctx.restore();
   }
 
@@ -1344,10 +1311,12 @@
       };
     }
 
-    drawStickman(position.x, position.y + 8, "#2f67ff", state.player.power, {
-      scale: 0.86,
-      player: true
-    });
+    ctx.save();
+    ctx.translate(position.x, position.y + 5);
+    const scale = Math.min(state.layout.roomWidth / 92, state.layout.roomHeight / 104);
+    ctx.scale(scale, scale);
+    drawStickman(0, 0, "#4775d1", state.player.power, { scale: 0.78, player: true });
+    ctx.restore();
   }
 
   function drawCanvasScene(now) {
@@ -1357,16 +1326,14 @@
     ctx.save();
     ctx.translate(shakeOffset, 0);
 
-    ctx.fillStyle = "#fffefb";
+    ctx.fillStyle = "#f8faf5";
     ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-
-    ctx.fillStyle = "rgba(242, 178, 72, 0.08)";
-    ctx.beginPath();
-    ctx.arc(70, 120, 46, 0, Math.PI * 2);
-    ctx.arc(state.canvasWidth - 64, 110, 54, 0, Math.PI * 2);
-    ctx.fill();
-
-    drawTowerHeader();
+    ctx.fillStyle = "#dfe6d8";
+    for (let x = 18; x < state.canvasWidth; x += 24) {
+      for (let y = 18; y < state.canvasHeight; y += 24) {
+        ctx.beginPath(); ctx.arc(x, y, 0.7, 0, Math.PI * 2); ctx.fill();
+      }
+    }
     drawLinks();
 
     const reachableIds = getReachableRoomIds();
@@ -1465,6 +1432,13 @@
     canvas.style.cursor = "default";
   });
 
+  ui.resultModal.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+    const first = ui.modalSecondary;
+    const last = ui.modalPrimary;
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
   window.addEventListener("resize", resizeCanvas, { passive: true });
 
   validateLevels();
