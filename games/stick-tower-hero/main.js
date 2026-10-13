@@ -1,6 +1,6 @@
 (function () {
   const LEVELS = window.STICK_TOWER_LEVELS || [];
-  const STORAGE_KEY = "moyu-stick-tower-progress-v2";
+  const STORAGE_KEY = "moyu-stick-tower-progress-v3";
   const LEGACY_STORAGE_KEY = "moyu-stick-tower-progress-v1";
   const MESSAGE_COLORS = {
     info: "#16304f",
@@ -11,6 +11,8 @@
 
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
+  const mapFrame = document.querySelector(".canvas-frame");
+  const zoomButton = document.getElementById("map-zoom");
 
   const ui = {
     levelName: document.getElementById("level-name"),
@@ -66,6 +68,7 @@
   }
 
   const state = {
+    overview: true,
     progress: loadProgress(),
     levelIndex: 0,
     level: null,
@@ -144,7 +147,7 @@
   function loadProgress() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      const legacyRaw = raw ? null : window.localStorage.getItem(LEGACY_STORAGE_KEY);
+      const legacyRaw = raw ? null : (window.localStorage.getItem("moyu-stick-tower-progress-v2") || window.localStorage.getItem(LEGACY_STORAGE_KEY));
       if (!raw && legacyRaw) {
         const legacy = JSON.parse(legacyRaw);
         return { unlocked: clamp(Number(legacy.unlocked) || 0, 0, LEVELS.length - 1), bestTimes: {}, bestScores: {} };
@@ -184,6 +187,9 @@
       name: level.name,
       shortName: level.shortName,
       chapter: level.chapter,
+      mapName: level.mapName,
+      theme: level.theme,
+      requiredRooms: level.requiredRooms,
       playerPower: level.playerPower,
       playerStart: level.playerStart,
       winRoom: level.winRoom,
@@ -282,6 +288,9 @@
 
     ui.levelName.textContent = state.level.name;
     ui.chapterName.textContent = state.level.chapter;
+    const targets = state.level.requiredRooms;
+    const completed = targets.filter(id => hasVisitedRoom(id)).length;
+    document.getElementById("map-mission").textContent = targets.length ? `本关目标：先完成 ★ 房间（${completed}/${targets.length}），再挑战 Boss。` : "本关目标：沿连线规划路线，积累战力击败 Boss。";
     ui.levelPicker.value = String(state.levelIndex);
     for (const option of ui.levelPicker.options) option.disabled = Number(option.value) > state.progress.unlocked;
     ui.levelIndexLabel.textContent = `第 ${state.levelIndex + 1} / ${LEVELS.length} 关`;
@@ -303,20 +312,32 @@
   }
 
   function resizeCanvas() {
-    if (state.level) {
-      const ys = state.level.rooms.map(room => room.y);
-      const rows = Math.max(...ys) - Math.min(...ys);
-      canvas.style.minHeight = `${rows * 84 + 100}px`;
-    }
+    if (!state.level) return;
+    const xs = state.level.rooms.map(room => room.x);
+    const ys = state.level.rooms.map(room => room.y);
+    const worldWidth = (Math.max(...xs) - Math.min(...xs)) * 104 + 120;
+    const worldHeight = (Math.max(...ys) - Math.min(...ys)) * 104 + 120;
+    const viewWidth = mapFrame.clientWidth - 2;
+    const viewHeight = Math.min(window.innerHeight * 0.6, 560);
+    const scale = state.overview ? Math.min(viewWidth / worldWidth, viewHeight / worldHeight, 1) : 1;
+    state.layout.mapScale = scale;
+    canvas.style.width = `${Math.max(viewWidth, worldWidth * scale)}px`;
+    canvas.style.height = `${Math.max(260, worldHeight * scale)}px`;
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
     state.canvasWidth = rect.width;
     state.canvasHeight = rect.height;
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    zoomButton.textContent = state.overview ? "放大地图" : "查看全图";
+    zoomButton.setAttribute("aria-pressed", String(!state.overview));
     refreshLayout();
+  }
+
+  function locatePlayer() {
+    const center = state.layout.centers.get(state.player.roomId);
+    if (center) mapFrame.scrollTo({ left: center.x - mapFrame.clientWidth / 2, top: center.y - mapFrame.clientHeight / 2, behavior: "instant" });
   }
 
   function refreshLayout() {
@@ -333,17 +354,13 @@
     const maxY = Math.max(...ys);
     const rawSpanX = maxX - minX;
     const rawSpanY = maxY - minY;
-    const spanX = Math.max(1, rawSpanX);
-    const spanY = Math.max(1, rawSpanY);
-    const usableWidth = Math.min(state.canvasWidth - 88, 440);
-    const paddingX = (state.canvasWidth - usableWidth) / 2;
-    const paddingTop = 54;
-    const paddingBottom = 54;
-    const usableHeight = state.canvasHeight - paddingTop - paddingBottom;
-    const stepX = usableWidth / spanX;
-    const stepY = usableHeight / spanY;
-    const roomWidth = clamp(stepX * 0.8, 58, 100);
-    const roomHeight = clamp(stepY * 0.82, 72, 102);
+    const pitch = 104 * state.layout.mapScale;
+    const paddingX = (state.canvasWidth - rawSpanX * pitch) / 2;
+    const paddingTop = (state.canvasHeight - rawSpanY * pitch) / 2;
+    const stepX = pitch;
+    const stepY = pitch;
+    const roomWidth = 78 * state.layout.mapScale;
+    const roomHeight = 88 * state.layout.mapScale;
 
     state.layout.roomWidth = roomWidth;
     state.layout.roomHeight = roomHeight;
@@ -371,6 +388,8 @@
     state.levelIndex = clamp(index, 0, LEVELS.length - 1);
     state.level = cloneLevel(LEVELS[state.levelIndex]);
     state.levelMeta = buildLevelMeta(state.level);
+    document.getElementById("map-name").textContent = `${state.level.mapName} · 沿连线探索`;
+    document.querySelector(".game-shell").style.setProperty("--map-hue", state.level.theme.hue);
     state.roomMap = state.levelMeta.roomMap;
     state.adjacency = state.levelMeta.adjacency;
     state.player.roomId = state.level.playerStart;
@@ -393,6 +412,7 @@
     state.levelEndedAt = 0;
     hideModal();
     resizeCanvas();
+    locatePlayer();
     setBaseMessage(state.level.tip, "info");
     showMessage(`已进入 ${state.level.shortName}。`, "info", 1200);
     updateHUD();
@@ -529,6 +549,10 @@
       return;
     }
 
+    if (room.id === state.level.winRoom && state.level.requiredRooms.some(id => !hasVisitedRoom(id))) {
+      markInvalid(room.id, "目标未完成：先经过所有 ★ 标记房间，再挑战 Boss。");
+      return;
+    }
     movePlayerToRoom(room);
   }
 
@@ -836,6 +860,7 @@
 
   function simulateSolverMove(node, targetRoomId, meta) {
     const room = meta.roomMap.get(targetRoomId);
+    if (targetRoomId === meta.level.winRoom && meta.level.requiredRooms.some(id => (node.visitedMask & (1 << meta.roomBits.get(id))) === 0)) return null;
     const type = getRoomTypeInSolver(targetRoomId, node.mask, meta);
     const roomMaskBit = meta.roomBits.get(targetRoomId);
     const next = {
@@ -1226,13 +1251,13 @@
     ctx.strokeStyle = isInvalid ? "#bc6b63" : isHinted ? "#c9a253" : isCurrent ? "#4775d1" : isReachable ? "#86ae77" : "#d7dfd1";
     ctx.stroke();
     roundedRectPath(ctx, -rect.width / 2 + 5, -rect.height / 2 + 5, rect.width - 10, 15, 5);
-    ctx.fillStyle = isCurrent ? "#eaf0fc" : accent;
+    ctx.fillStyle = isCurrent ? "#eaf0fc" : room.goal && !isVisited ? "#f7e9ba" : accent;
     ctx.fill();
     ctx.fillStyle = isVisited ? "#899386" : "#52614f";
     ctx.font = "600 10px 'Segoe UI', 'PingFang SC', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(isCurrent ? "你的位置" : isHinted ? "下一步" : roomTitle(room), 0, -rect.height / 2 + 13);
+    ctx.fillText(isCurrent ? "你的位置" : isHinted ? "下一步" : `${room.goal && !isVisited ? "★ " : ""}${roomTitle(room)}`, 0, -rect.height / 2 + 13, rect.width - 10);
     ctx.restore();
 
     const contentScale = Math.min(rect.width / 92, rect.height / 104);
@@ -1351,12 +1376,31 @@
     ctx.save();
     ctx.translate(shakeOffset, 0);
 
-    ctx.fillStyle = "#f8faf5";
+    const { hue, pattern } = state.level.theme;
+    ctx.fillStyle = `hsl(${hue} 28% 96%)`;
     ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-    ctx.fillStyle = "#dfe6d8";
-    for (let x = 18; x < state.canvasWidth; x += 24) {
-      for (let y = 18; y < state.canvasHeight; y += 24) {
-        ctx.beginPath(); ctx.arc(x, y, 0.7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `hsl(${hue} 25% 87% / .55)`;
+    ctx.fillStyle = `hsl(${hue} 28% 88% / .35)`;
+    ctx.lineWidth = 1;
+    if (pattern === "rings" || pattern === "diamonds") {
+      const cx = state.canvasWidth / 2, cy = state.canvasHeight / 2;
+      for (let r = 48; r < Math.max(cx, cy) * 1.5; r += 62) {
+        ctx.beginPath();
+        if (pattern === "rings") ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        else { ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy); ctx.closePath(); }
+        ctx.stroke();
+      }
+    } else if (pattern === "islands" || pattern === "towers") {
+      for (const center of state.layout.centers.values()) {
+        if (pattern === "islands") { ctx.beginPath(); ctx.ellipse(center.x, center.y + 16, state.layout.roomWidth * .85, state.layout.roomHeight * .65, 0, 0, Math.PI * 2); ctx.fill(); }
+        else { ctx.fillRect(center.x - 8, 0, 16, state.canvasHeight); }
+      }
+    } else {
+      for (let x = 18; x < state.canvasWidth; x += 28) {
+        for (let y = 18; y < state.canvasHeight; y += 28) {
+          if (pattern === "circuit") { ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke(); }
+          else { ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI * 2); ctx.fill(); }
+        }
       }
     }
     drawLinks();
@@ -1455,7 +1499,9 @@
     }
   });
 
-  canvas.addEventListener("pointerdown", handleCanvasPointerDown);
+  zoomButton.addEventListener("click", () => { state.overview = !state.overview; resizeCanvas(); locatePlayer(); });
+  document.getElementById("map-locate").addEventListener("click", locatePlayer);
+  canvas.addEventListener("click", handleCanvasPointerDown);
   canvas.addEventListener("pointermove", handleCanvasPointerMove);
   canvas.addEventListener("pointerleave", () => {
     state.hoverRoomId = null;

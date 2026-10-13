@@ -6,23 +6,33 @@ const K = (value = 1) => ({ type: "key", value });
 const L = (value = 1) => ({ type: "lock", value });
 const P = value => ({ type: "trap", value });
 const R = (label, x, item, from) => ({ label, x, ...item, from: from.split(" ") });
+const MISSIONS = { 2: ["c"], 3: ["c"], 4: ["e"], 7: ["g"], 8: ["e"], 9: ["c"], 12: ["h"], 13: ["d", "f"], 14: ["d", "f"], 15: ["e", "i"], 16: ["e", "h"], 20: ["h", "k"], 24: ["j", "m"] };
 const CHAPTERS = ["初登高塔", "钥匙之道", "险路求生", "岔路迷城", "机关堡垒", "塔顶试炼"];
 
 function createCampaignLevel(config, index) {
   const floors = [[{ label: "s", x: config.startX ?? 1.5, type: "start", from: [] }], ...config.floors];
   floors.push([R("boss", config.bossX ?? 1.5, { type: "boss", value: config.boss }, config.finish)]);
   const roomSpecs = floors.flatMap((floor, y) => floor.map(item => ({ ...item, y: floors.length - 1 - y })));
+  const design = window.STICK_TOWER_MAPS[index];
+  for (const item of roomSpecs) {
+    const position = design.positions[item.label];
+    if (!position) throw new Error(`Map ${index + 1} missing ${item.label}`);
+    [item.x, item.y] = position;
+  }
   const ids = new Map(roomSpecs.map((item, i) => [item.label, i + 1]));
   return {
     id: index + 1,
     name: `第 ${index + 1} 关 · ${config.name}`,
     shortName: config.name,
     chapter: CHAPTERS[Math.floor(index / 4)],
+    mapName: design.name,
+    theme: { hue: design.hue, pattern: design.pattern },
+    requiredRooms: (MISSIONS[index + 1] || []).map(label => ids.get(label)),
     playerPower: config.power,
     playerStart: ids.get("s"),
     winRoom: ids.get("boss"),
     tip: config.tip,
-    rooms: roomSpecs.map(({ label, x, y, type, value }) => ({ id: ids.get(label), x, y, type, ...(value === undefined ? {} : { value }) })),
+    rooms: roomSpecs.map(({ label, x, y, type, value }) => ({ id: ids.get(label), x, y, type, goal: (MISSIONS[index + 1] || []).includes(label), ...(value === undefined ? {} : { value }) })),
     links: roomSpecs.flatMap(item => item.from.map(parent => {
       if (!ids.has(parent)) throw new Error(`Level ${index + 1}: unknown room ${parent}`);
       return [ids.get(parent), ids.get(item.label)];

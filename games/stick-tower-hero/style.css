@@ -76,3 +76,14 @@ a:focus-visible, button:focus-visible, summary:focus-visible, canvas:focus-visib
   .chapter-label { font-size: 9px; }
   .arena-heading > div { min-width: 0; }
 }
+
+.map-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 14px 0; font-size: 10px; color: var(--muted); }
+.map-toolbar > span { color: hsl(var(--map-hue, 135) 35% 35%); font-weight: 650; }
+.map-toolbar > div { display: flex; gap: 6px; }
+.map-toolbar button { min-height: 36px; padding: 6px 10px; font-size: 10px; color: var(--ink); background: #f6f8f1; border: 1px solid var(--line); border-radius: 8px; }
+.map-toolbar button[aria-pressed="true"] { background: hsl(var(--map-hue, 135) 30% 91%); }
+.canvas-frame { overflow: auto; max-height: min(60dvh, 560px); overscroll-behavior: contain; scrollbar-width: thin; }
+canvas { touch-action: pan-x pan-y; max-width: none; }
+@media (max-width: 700px) { .map-toolbar { padding: 8px 10px 0; font-size: 9px; }.map-toolbar button { min-height: 40px; font-size: 10px; } }
+
+.map-mission { margin: 6px 14px 0; font-size: 11px; color: #8b743c; }

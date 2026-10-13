@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const context = { window: {} };
+vm.runInNewContext(readFileSync(new URL("../games/stick-tower-hero/maps.js", import.meta.url), "utf8"), context);
 vm.runInNewContext(readFileSync(new URL("../games/stick-tower-hero/levels.js", import.meta.url), "utf8"), context);
 const levels = context.window.STICK_TOWER_LEVELS;
 assert.equal(levels.length, 24);
@@ -13,7 +14,11 @@ const reports = [];
 
 for (const [index, level] of levels.entries()) {
   assert.equal(level.id, index + 1);
-  assert(level.chapter && level.tip);
+  assert(level.chapter && level.tip && level.mapName);
+  assert(Number.isFinite(level.theme.hue));
+  assert.equal(Object.keys(context.window.STICK_TOWER_MAPS[index].positions).length, level.rooms.length);
+  assert(level.requiredRooms.every(id => level.rooms.some(room => room.id === id && room.goal)));
+  assert.equal(level.requiredRooms.length, level.rooms.filter(room => room.goal).length);
   assert(level.rooms.length < 31, "Room count exceeds the game's bitmask capacity");
   const rooms = new Map(level.rooms.map(room => [room.id, room]));
   assert.equal(rooms.size, level.rooms.length);
@@ -23,7 +28,7 @@ for (const [index, level] of levels.entries()) {
   const positions = new Set();
   for (const room of level.rooms) {
     assert(allowedTypes.has(room.type));
-    assert(Number.isFinite(room.x) && Number.isFinite(room.y));
+    assert(Number.isInteger(room.x) && Number.isInteger(room.y));
     const position = `${room.x},${room.y}`;
     assert(!positions.has(position), `Level ${level.id}: duplicate room position`);
     positions.add(position);
@@ -46,6 +51,7 @@ for (const [index, level] of levels.entries()) {
   let wins = 0, blocked = 0, minMoves = Infinity, maxMoves = 0, doubleDoorWins = 0;
   function visit(id, power, keys, visited, usedDoubleDoor) {
     if (id === level.winRoom) {
+      if (level.requiredRooms.some(target => !visited.has(target))) return;
       wins++; minMoves = Math.min(minMoves, visited.size - 1); maxMoves = Math.max(maxMoves, visited.size - 1);
       if (usedDoubleDoor) doubleDoorWins++;
       return;
